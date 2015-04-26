@@ -9,7 +9,6 @@
  *
  */
 
-
 #ifndef _DBTPROJ_H
 #define _DBTPROJ_H
 
@@ -83,4 +82,3 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 
 
 #endif
-

@@ -1,0 +1,19 @@
+# depslib dependency file v1.0
+1430057061 source:/home/sakis/Desktop/DBT/DBT/main.cpp
+	"dbtproj.h"
+	<cstdlib>
+	<cstring>
+	<cstdio>
+	<iostream>
+
+1430051758 /home/sakis/Desktop/DBT/DBT/dbtproj.h
+
+1430059938 source:/home/sakis/Desktop/DBT/DBT/src/dbproj.cpp
+	"dbproj.h"
+	<cstdlib>
+	<cstring>
+	<cstdio>
+	<iostream>
+
+1430051787 /home/sakis/Desktop/DBT/DBT/include/dbproj.h
+
