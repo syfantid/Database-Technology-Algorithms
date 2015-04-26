@@ -4,7 +4,7 @@
 
 using namespace std;
 
-MinHeap::MinHeap(int heapSize)
+template<class E>MinHeap::MinHeap(int heapSize)
 {
     heapArray = new(nothrow) int[heapSize];
     heapMaxSize = heapSize;

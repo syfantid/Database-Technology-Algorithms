@@ -19,20 +19,18 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer, unsigned int
     //while (!feof(inputfile)) {
 
     while(!feof(inputfile)) {
-            for (int b=0;b<nmem_blocks;b++){
-                fread(&buffer[b], sizeof(block_t), 1, inputfile);
-                cout<<"number"<<b<<endl;
-                nreserved = buffer[b].nreserved;
-                /*if(feof(inputfile)) {
-                    flag = true;
-                    fclose(inputfile);
-                    break;
-                }*/
-                for (int i=0; i<nreserved; ++i) {
+
+        for (int b=0;b<nmem_blocks;b++) {
+            fread(&buffer[b], sizeof(block_t), 1, inputfile);
+            cout<<"number"<<b<<endl;
+            nreserved = buffer[b].nreserved;
+
+            for (int i=0; i<nreserved; ++i) {
                 printf("this is block id: %d, record id: %d, num: %d, str: %s\n",
                         buffer[b].blockid, buffer[b].entries[i].recid, buffer[b].entries[i].num,
                                                                             buffer[b].entries[i].str);
-                }
+            }
+
         }
         memset(buffer,NULL,nmem_blocks*sizeof(block_t));
 
