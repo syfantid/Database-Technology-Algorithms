@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
 		fwrite(&block, 1, sizeof(block_t), outfile);	// write the block to the file
 	}
-    cout<<"lice";
+    //cout<<"lice";
 	fclose(outfile);
 	block_t *buffer;
 	char *outputfile;
@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
 	unsigned int *u4;
 	unsigned int *u3;
     MergeSort("file.bin",1,buffer,2,outputfile,u1,u2,u3);
-	/*// open file and print contents
-	infile = fopen("file.bin", "r");
+	// open file and print contents
+	/*infile = fopen("file.bin", "r");
 	int nreserved;
 	while (!feof(infile)) { // while end-of-file has not been reached ...
 
