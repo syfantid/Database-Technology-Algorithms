@@ -1,14 +1,20 @@
 #include "QuickSort.h"
+#include <algorithm>
+
 template<class T>
-QuickSort::QuickSort(T *a,int n)
+QuickSort<T>::QuickSort(T *a,int n)
 {
-    QuickSort(a,0,n-1)
+    /*QuickSort(a, 0, n-1)
+    What do you mean by this? This function does not exist...
+    */
 }
 
 template<class T>
 void quickSort(T a[],int l,int r)
 {
-    if (l>= r) return ;
+    std::sort(a + l, a + r);
+    return;
+  /*  if (l>= r) return ;
     int i=l,
         j=r+1;
     T pivot = a[1];
@@ -21,9 +27,9 @@ void quickSort(T a[],int l,int r)
         do
         {
             j=j-1;
-        }while(a[j]>pivot)
+        }while(a[j]>pivot);
         if (i>=j) break;
-        Swap
+        //Swap
     }
-
+*/
 }

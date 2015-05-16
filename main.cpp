@@ -1,8 +1,8 @@
-#include "dbtproj.h"
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include "DatabaseProject.h"
 #include <iostream>
+#include "QuickSort.h"
+#include "MinHeap.h"
+
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -37,13 +37,14 @@ int main(int argc, char** argv) {
 	}
     //cout<<"lice";
 	fclose(outfile);
-	block_t *buffer;
-	char *outputfile;
-	unsigned int *u1;
-	unsigned int *u2;
-	unsigned int *u4;
-	unsigned int *u3;
-    MergeSort("file.bin",1,buffer,2,outputfile,u1,u2,u3);
+	block_t *buffer = NULL;
+	char *outputfile = NULL;
+	unsigned int *u1 = NULL;
+	unsigned int *u2 = NULL;
+	unsigned int *u4 = NULL;
+	unsigned int *u3 = NULL;
+	char filename[] = "file.bin";
+    MergeSort(filename,1,buffer,2,outputfile,u1,u2,u3);
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
 	int nreserved;
@@ -60,6 +61,9 @@ int main(int argc, char** argv) {
 	}
 
 	fclose(infile);*/
+	QuickSort<int> qs(NULL, 0);
+	MinHeap<int> mh(100);
+	mh.Insert(10);
 
 	return 0;
 }

@@ -1,5 +1,5 @@
 #include "MinHeap.h"
-#include "dbtproj.h"
+
 template<class T>
 MinHeap<T>::MinHeap(int MinHeapSize)
 {
@@ -52,15 +52,4 @@ MinHeap<T>& MinHeap<T>::DeleteMin(T& x)
     heap[i]=y;
     return *this;
 }
-bool operator > (record_t a,record_t b)
-{
-    if (a.num> b.num)
-        return true;
-    return false;
-}
-bool operator < (record_t a, record_t b)
-{
-    if (a.num < b.num)
-        return true;
-    return false;
-}
+

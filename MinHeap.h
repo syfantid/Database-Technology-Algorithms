@@ -20,5 +20,6 @@ class MinHeap
         T *heap;
 };
 
+#include "MinHeap.inl"
 
 #endif // MINHEAP_H
