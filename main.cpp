@@ -7,14 +7,14 @@ using namespace std;
 
 int main(int argc, char** argv) {
 
-	int nblocks = 5;	// number of blocks in the file
+	int nblocks = 20;	// number of blocks in the file
 	record_t record;
 	block_t block;
 	unsigned int recid = 0;
 	FILE *infile, *outfile;
 
-	// generate a file
-	outfile = fopen("file.bin", "w");
+	//Generate a file
+	outfile = fopen("file.bin", "wb");
 
 	for (int b=0; b<nblocks; ++b) { // for each block
 
@@ -39,12 +39,11 @@ int main(int argc, char** argv) {
 	fclose(outfile);
 	block_t *buffer = NULL;
 	char *outputfile = NULL;
-	unsigned int *u1 = NULL;
-	unsigned int *u2 = NULL;
-	unsigned int *u4 = NULL;
-	unsigned int *u3 = NULL;
+	unsigned int *segmentsNumber = NULL;
+	unsigned int *sortingPhases = NULL;
+	unsigned int *IOsNumber = NULL;
 	char filename[] = "file.bin";
-    MergeSort(filename,1,buffer,2,outputfile,u1,u2,u3);
+    MergeSort(filename,'1',buffer,4,outputfile,segmentsNumber,sortingPhases,IOsNumber);
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
 	int nreserved;
