@@ -22,6 +22,7 @@ typedef struct {
     unsigned int num;
     char str[STR_LENGTH];
     bool valid;  // if set, then this record is valid
+    int blockID; //The block the record belongs too -> Used only for minheap
 } record_t;
 
 

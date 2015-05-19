@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <queue>
+#include <math.h>
 #include "MinHeap.h"
 using namespace std;
 
@@ -101,8 +102,8 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
     int recordsIndex = 0;
     int nreserved;
     unsigned fileNumber = 0; //The next number of file to be written on disc
-
-    //While there are more records in the file to be read - STEP 0
+    //Creating the initial files from the input file - STEP 0
+    //While there are more records in the file to be read
     while(!feof(inputfile)) {
         //Read as many blocks as the buffer fits
         fread(buffer, sizeof(block_t), nmem_blocks, inputfile);
@@ -114,10 +115,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             nreserved = buffer[b].nreserved;
             //For each record in the block
             for (int i=0; i<nreserved; ++i) {
-                records[recordsIndex]=buffer[b].entries[i];
-                printf("This is record id: %-5d, num: %-5d, str: %s\n",
-                       records[recordsIndex].recid, records[recordsIndex].num,
-                       records[recordsIndex].str);
+                records[recordsIndex]= buffer[b].entries[i];
                 recordsIndex++;
             }
         }
@@ -137,7 +135,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         string name = createFileName(fileNumber);
         outputfile = fopen(name.c_str(), "wb");
 
-        fwrite(records, sizeof(record_t), recordsIndex, outputfile);
+        fwrite(records, recordsIndex, sizeof(record_t), outputfile);
         fclose(outputfile);
 
         //Emptying buffer
@@ -146,102 +144,137 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
     }
     fclose(inputfile); //Closing the initial file
     //N-WAY MERGE - STEP 1...N
-    vector<FILE*> files(nmem_blocks); //The open n-1 files, one for each buffer slot
-    vector<string> names(nmem_blocks); //The names of the open files in each buffer
     unsigned phase = 0; //Number of phases for the merging
-    int number = 1; //Current file number
+    int filesInPhase = fileNumber;
     int filesProducedInPhase = 0;
-
-    while(filesProducedInPhase != 1 && phase != 1) { //PHASE != 1 ONLY FOR TESTING
-        //Give n-1 buffer blocks for input; 1 for output
-
+    int inputFileNumber = 1; //Current file number e.g.5
+    int outputFileNumber = filesInPhase+1; //Next number of name available e.g.segment6.bin
+    int initialOutputFileNumber = outputFileNumber;
+    do{ //While we have more than 1 file for the next round to merge -
+         //DO WHILE FOR TOTAL ROUNDS
+        vector<FILE*> currentFiles(nmem_blocks-1); //The current n-1 files of a block
+        vector<string> names(nmem_blocks-1); //The names of the open currentFiles
+        int filesRead = 0; //Files read so far
         priority_queue<record_t*,vector<record_t*>, CompareRecordNum > pq;
-        vector<unsigned> index(nmem_blocks,0); //Keeps the index we are in each block
-        //Put the first block of the first nmem_blocks-1 files into the buffer blocks
-
-        for(unsigned b=0; b<nmem_blocks-1; ++b) {
-            readFileBlock(number,b,names,files,buffer);
-            ++number;
-            pq.push(&buffer[b].entries[index[b]]); //Put a record inside the minheap
-        }
-            /*bool flag = false;
-            if(buffer[b].nreserved!=0) { //If block isn't empty
-                if(index[b] >= buffer[b].nreserved) {//If all the buffer block's
-                //elements are already in the minheap
-                    if(readFileBlock(number,b,names,files,buffer)) { //If there are more blocks in
-                    //the file to be read, read one
-                        index[b] = 0; //Starts over
+        //Keeps the index we are in each block, n-1 for input and the nth for output
+        vector<unsigned> index(nmem_blocks,0);
+        while(filesRead < filesInPhase) {
+        //While there are more current
+        //files to be read in this round - WHILE FOR FILES IN ROUND
+            string outputName = createFileName(outputFileNumber);
+            outputfile = fopen(outputName.c_str(), "ab"); //Opens file for appending
+            for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read their
+                //first block into n-1 buffer blocks
+                if(inputFileNumber<initialOutputFileNumber &&
+                   readFileBlock(inputFileNumber,b,names,currentFiles,buffer)) {
+                    ++filesRead; //Each buffer block "reads" a different file
+                    ++inputFileNumber; //Update the file number to be read next
+                    buffer[b].entries[index[b]].blockID = b;
+                    pq.push(&buffer[b].entries[index[b]]); //Put a record inside the minheap
+                }
+            }
+            bool flag = true;
+            while(flag) { //While there is still at least one buffer block with records
+                flag = false;
+                if(buffer[nmem_blocks-1].nreserved == MAX_RECORDS_PER_BLOCK) {
+                //If output buffer is full, append it to file
+                    //Append buffer output block to file. If file doesn't exist open it.
+                    fwrite(&buffer[nmem_blocks-1].entries,buffer[nmem_blocks-1].
+                           nreserved, sizeof(record_t), outputfile);
+                    //Empty the output buffer block
+                    memset(&buffer[nmem_blocks-1],0,sizeof(block_t));
+                    index[nmem_blocks-1] = 0;
+                    fclose(outputfile);
+                }
+                //Store the minimum record to buffer output block
+                memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
+                       pq.top(),sizeof(record_t));
+                ++buffer[nmem_blocks-1].nreserved;
+                ++index[nmem_blocks-1];
+                //printRecord(*pq.top());
+                int b = ((record_t*)pq.top())->blockID;
+                pq.pop();
+                ++index[b];
+                if(index[b] == buffer[b].nreserved) { //If the buffer block has
+                //reached its end, read the next block from file
+                    if(readOpenFileBlock(b,currentFiles,buffer,names)) {
+                        index[b] = 0;
+                    } //else the file has finished
+                }
+                if(index[b] < buffer[b].nreserved) {
+                    buffer[b].entries[index[b]].blockID = b;
+                    pq.push(&buffer[b].entries[index[b]]);
+                }
+                for(unsigned b=0; b<nmem_blocks-1; ++b) {
+                    if(buffer[b].nreserved != 0) {
                         flag = true;
                     }
-                } else { //If there are still elements to be put in the minheap
-                    flag = true;
                 }
-            } else { //If the buffer block is empty - First nmem_blocks-1 iterations will end up here
-            //Fill the buffer block with a file block
-                if(readFileBlock(number,b,names,files,buffer)) {
-                    flag = true;
-                }
-                ++number;
             }
-            if(flag) {
-                pq.push(&buffer[b].entries[index[b]]); //Put a record inside the minheap
-            }*/
-        /*//while(аявеио дем евеи текеиысеи) - EDWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW!!!!!
-        //When the buffer is full (n-1 slots) put everything in a minheap
-        for(int b=0; b<nmem_blocks-1; ++b) {
-            for(i=0; i<buffer[b].nreserved; ++i) {
-                pq.push(&buffer[b].entries[i]); //Put all the records from the
-                //n-1 blocks inside a minheap
-            }
-        }
-        //Empty the minheap into one file and thus merge the blocks
-        //The last block will be filled and written to file n-1 times
-        //e.g. The last block fits 10 records and the other 3 30. Thus we need
-        //3 iterations to put the 30 records inside the last block
-        outputfile = fopen(createFileName(fileNumber).c_str(), "ab");
-        for(times=0; times<nmem_blocks-1; ++times) {
-        //Go to the last buffer block and pop as many records as possible
-            buffer[nmem_blocks-1].nreserved = 0;
-            buffer[nmem_blocks-1].valid = true;
-            for(i=0; i<MAX_RECORDS_PER_BLOCK; i++) {
-                buffer[nmem_blocks-1].entries[i] = *pq.top();
-                buffer[nmem_blocks-1].nreserved+=1;
+            while(!pq.empty()) {
+                fwrite(pq.top(),1,sizeof(record_t),outputfile);
+                printRecord(*pq.top());
                 pq.pop();
             }
-            //Now last buffer block is full, write to file
-            fwrite(&buffer[nmem_blocks-1], sizeof(block_t), buffer[nmem_blocks].nreserved, outputfile)
-        }
-        fclose(outputfile);*/
 
+            ++outputFileNumber;
+            ++filesProducedInPhase;
+            fclose(outputfile);
+            for(unsigned i=0; i<nmem_blocks-1; ++i) {
+                fclose(currentFiles[i]);
+            }
+            memset(buffer,0,nmem_blocks*sizeof(block_t));
+            for(unsigned b=0; b<nmem_blocks; ++b) {
+                index[b] = 0;
+            }
+        }
         phase+=1;
         fileNumber += filesProducedInPhase;
-    }
+        outputFileNumber = inputFileNumber+filesProducedInPhase;
+        initialOutputFileNumber = outputFileNumber;
+        filesInPhase = filesProducedInPhase;
+    } while(filesProducedInPhase!=1);
     npasses = &phase;
     nsorted_segs = &fileNumber;
 }
 
-bool readFileBlock(int number, int b,vector<string>& names,vector<FILE*>& files,block_t *buffer) {
-    names[b] = createFileName(number);
-    files[b] = fopen(names[b].c_str(),"rb");
+void printRecord(record_t r) {
+    printf("This is record id: %-5d, num: %-5d, str: %s\n",r.recid,r.num,r.str);
+}
+
+bool readBlock(unsigned b,vector<FILE*>& currentFiles,block_t *buffer) {
+//File is already open
     //Each buffer is assigned a specific file to process
     buffer[b].nreserved = 0;
     buffer[b].valid = true;
     buffer[b].blockid = b;
 
-    cout<<"-----------FILE: "<<names[b]<<"-----------"<<endl;
     //Read all the records from the file's block to memory
-    for(unsigned rec=0; rec<MAX_RECORDS_PER_BLOCK; rec++) { //MAYBE BUG - PROBLEM IF FILE REACHES END
-        fread(&buffer[b].entries[rec],sizeof(record_t),1,files[b]);
-        if(!feof(files[b])) {
+    for(unsigned rec=0; rec<MAX_RECORDS_PER_BLOCK; rec++) { //MAYBE BUG - PROBLEM IF FILE REACHES END?
+        if(fread(&buffer[b].entries[rec],sizeof(record_t),1,currentFiles[b]) == 1) {
             buffer[b].nreserved += 1;
+            printRecord(buffer[b].entries[rec]);
         } else {
             return false;
         }
-        printf("This is record id: %-5d, num: %-5d, str: %s and is part of block %d\n",
-            buffer[b].entries[rec].recid, buffer[b].entries[rec].num,
-            buffer[b].entries[rec].str,b);
     }
     return true;
+}
+
+bool readFileBlock(int number, unsigned b,vector<string>& names,vector<FILE*>& currentFiles,block_t *buffer) {
+    names[b] = createFileName(number);
+    if(!(currentFiles[b] = fopen(names[b].c_str(),"rb"))) {
+        return false;
+    }
+
+    cout<<"-----------FILE: "<<names[b]<<"-----------"<<endl;
+    //Read all the records from the file's block to memory
+    return readBlock(b,currentFiles,buffer);
+}
+
+bool readOpenFileBlock(unsigned b, vector<FILE*>& currentFiles,block_t *buffer,vector<string>& names) {
+    cout<<"-----------FILE: "<<names[b]<<"-----------"<<endl;
+    return readBlock(b,currentFiles,buffer);
 }
 
 string createFileName(unsigned fileNumber) {
