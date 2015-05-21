@@ -34,8 +34,6 @@
 		</Compiler>
 		<Unit filename="DatabaseProject.cpp" />
 		<Unit filename="DatabaseProject.h" />
-		<Unit filename="MinHeap.h" />
-		<Unit filename="QuickSort.h" />
 		<Unit filename="dbtproj.h" />
 		<Unit filename="file.bin" />
 		<Unit filename="main.cpp" />

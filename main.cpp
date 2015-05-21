@@ -60,10 +60,6 @@ int main(int argc, char** argv) {
 	}
 
 	fclose(infile);*/
-	QuickSort<int> qs(NULL, 0);
-	MinHeap<int> mh(100);
-	mh.Insert(10);
-
 	return 0;
 }
 

@@ -205,7 +205,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             //If output buffer is full, append it to file
             //Append buffer output block to file. If file doesn't exist open it.
                     cout<<"Buffer output block maxed out!"<<endl;
-                    for(int i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
+                    for(unsigned i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
                         printRecord(buffer[nmem_blocks-1].entries[i]);
                     }
                     fwrite(&buffer[nmem_blocks-1], sizeof(block_t), 1,
