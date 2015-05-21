@@ -35,9 +35,7 @@
 		<Unit filename="DatabaseProject.cpp" />
 		<Unit filename="DatabaseProject.h" />
 		<Unit filename="MinHeap.h" />
-		<Unit filename="MinHeap.inl" />
 		<Unit filename="QuickSort.h" />
-		<Unit filename="QuickSort.inl" />
 		<Unit filename="dbtproj.h" />
 		<Unit filename="file.bin" />
 		<Unit filename="main.cpp" />

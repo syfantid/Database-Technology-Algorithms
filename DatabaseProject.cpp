@@ -192,8 +192,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                         ++inputFileNumber; //Update the file number to be read next
                         buffer[b].entries[index[b]].blockID = b;
                         //Put a record inside the minheap
-                        cout<<"Pushed: "<<endl;
-                        printRecord(buffer[b].entries[index[b]]);
                         pq.push(&buffer[b].entries[index[b]]);
                         printRecord(buffer[b].entries[index[b]]);
                     }
