@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
 		block.nreserved = MAX_RECORDS_PER_BLOCK;
 		block.valid = true;
-
+		block.dummy = MAX_RECORDS_PER_BLOCK;
 		fwrite(&block, 1, sizeof(block_t), outfile);	// write the block to the file
 	}
     //cout<<"lice";

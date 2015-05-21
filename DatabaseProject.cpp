@@ -132,19 +132,17 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         fileNumber += 1; //Each buffer we fill refers to a sorted segment (different file)
         //Write buffer to file
         int recSecIndex=0;
-        for (int b=0; b<nmem_blocks;i++)
+        string name = createFileName(fileNumber);
+        outputfile = fopen(name.c_str(), "wb");
+        for (unsigned b=0; b<nmem_blocks;b++)
         {
             for (int i=0;i<MAX_RECORDS_PER_BLOCK && recSecIndex<recordsIndex;i++)
             {
                 buffer[b].entries[i]=records[recSecIndex];
                 recSecIndex++;
             }
-
+            fwrite(&buffer[b],sizeof(block_t),1,outputfile);
         }
-        string name = createFileName(fileNumber);
-        outputfile = fopen(name.c_str(), "wb");
-        fwrite(buffer, nmem_blocks, sizeof(block_t), outputfile);
-        //Files contain records, not whole blocks
         fclose(outputfile);
 
         //Emptying buffer
@@ -176,19 +174,29 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         while(filesRead < filesInPhase) {
             int fileWrites = 0;
             cout<<"Files read in phase so far: "<<filesRead<<endl<<
-            "Total files in phase: "<<filesInPhase<<endl;
+            "Total files in phase: "<<filesInPhase<<endl<<"File number: "<<inputFileNumber<<endl;
         //While there are more current
         //files to be read in this round - WHILE FOR FILES IN ROUND
             string outputName = createFileName(outputFileNumber);
             outputfile = fopen(outputName.c_str(), "wb");
+
             for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read
             //their first block into n-1 buffer blocks
-                if(inputFileNumber<initialOutputFileNumber && fread(&buffer[b],sizeof(block_t),1,currentFiles[b]) && !feof(currentFiles[b])) {
-                    ++filesRead; //Each buffer block "reads" a different file
-                    ++inputFileNumber; //Update the file number to be read next
-                    buffer[b].entries[index[b]].blockID = b;
-                    //Put a record inside the minheap
-                    pq.push(&buffer[b].entries[index[b]]);
+                names[b] = createFileName(inputFileNumber);
+                currentFiles[b] = fopen(names[b].c_str(),"rb");
+                cout<<"Buffer block: "<<b<<endl;
+                if(inputFileNumber<initialOutputFileNumber) {
+                    fread(&buffer[b],sizeof(block_t),1,currentFiles[b]);
+                    if(!feof(currentFiles[b])) {
+                        ++filesRead; //Each buffer block "reads" a different file
+                        ++inputFileNumber; //Update the file number to be read next
+                        buffer[b].entries[index[b]].blockID = b;
+                        //Put a record inside the minheap
+                        cout<<"Pushed: "<<endl;
+                        printRecord(buffer[b].entries[index[b]]);
+                        pq.push(&buffer[b].entries[index[b]]);
+                        printRecord(buffer[b].entries[index[b]]);
+                    }
                 }
             }
             bool flag = true;
@@ -199,25 +207,23 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             //If output buffer is full, append it to file
             //Append buffer output block to file. If file doesn't exist open it.
                     cout<<"Buffer output block maxed out!"<<endl;
-                    /*for(int i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
-                        printRecord(buffer[nmem_blocks].entries[i]);
-                    }*/
-                    fwrite(&buffer[nmem_blocks-1], sizeof(record_t), 1,
+                    for(int i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
+                        printRecord(buffer[nmem_blocks-1].entries[i]);
+                    }
+                    fwrite(&buffer[nmem_blocks-1], sizeof(block_t), 1,
                            outputfile);
                     fileWrites += buffer[nmem_blocks-1].nreserved;
-                    cout<<"So far we've written: "<<fileWrites<<" records."<<endl;
+                    //cout<<"So far we've written: "<<fileWrites<<" records."<<endl;
                     //Empty the output buffer block
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));
                     index[nmem_blocks-1] = 0;
                 }
-                //Store the minimum record to buffer output block
-                memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
-                       pq.top(),sizeof(record_t));
-
-                //printRecord(*pq.top());
+                if(!pq.empty()) {
+                    memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
+                           pq.top(),sizeof(record_t));
+                }
                 ++buffer[nmem_blocks-1].nreserved;
                 ++index[nmem_blocks-1];
-                //printRecord(*pq.top());
                 int b = ((record_t*)pq.top())->blockID;
                 pq.pop();
                 ++index[b];
@@ -239,11 +245,13 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 }
             }
             while(!pq.empty()) { //While there are more elements in the minheap
-                //cout<<"Remaining queue"<<endl;
-                //printRecord(*pq.top());
-                //fwrite(pq.top(),1,sizeof(record_t),outputfile);
-                //printRecord(*pq.top());
-                ++fileWrites;
+                if(index[nmem_blocks-1] >= buffer[nmem_blocks-1].nreserved) {
+                    fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,outputfile);
+                    memset(&buffer[nmem_blocks-1],0,sizeof(block_t));
+                    index[nmem_blocks-1] = 0;
+                }
+                memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
+                       pq.top(),sizeof(record_t));
                 pq.pop();
             }
             cout<<"Total number of writings to file "<<outputFileNumber<<" is "
