@@ -131,9 +131,19 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 
         fileNumber += 1; //Each buffer we fill refers to a sorted segment (different file)
         //Write buffer to file
+        int recSecIndex=0;
+        for (int b=0; b<nmem_blocks;i++)
+        {
+            for (int i=0;i<MAX_RECORDS_PER_BLOCK && recSecIndex<recordsIndex;i++)
+            {
+                buffer[b].entries[i]=records[recSecIndex];
+                recSecIndex++;
+            }
+
+        }
         string name = createFileName(fileNumber);
         outputfile = fopen(name.c_str(), "wb");
-        fwrite(records, recordsIndex, sizeof(record_t), outputfile);
+        fwrite(buffer, nmem_blocks, sizeof(block_t), outputfile);
         //Files contain records, not whole blocks
         fclose(outputfile);
 
