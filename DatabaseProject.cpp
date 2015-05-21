@@ -173,8 +173,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             outputfile = fopen(outputName.c_str(), "wb");
             for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read
             //their first block into n-1 buffer blocks
-                if(inputFileNumber<initialOutputFileNumber &&
-                   readFileBlock(inputFileNumber,b,names,currentFiles,buffer)) {
+                if(inputFileNumber<initialOutputFileNumber && fread(&buffer[b],sizeof(block_t),1,currentFiles[b]) && !feof(currentFiles[b])) {
                     ++filesRead; //Each buffer block "reads" a different file
                     ++inputFileNumber; //Update the file number to be read next
                     buffer[b].entries[index[b]].blockID = b;
@@ -193,9 +192,9 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                     /*for(int i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
                         printRecord(buffer[nmem_blocks].entries[i]);
                     }*/
-                    fwrite(buffer[nmem_blocks-1].entries, MAX_RECORDS_PER_BLOCK,
-                            sizeof(record_t), outputfile);
-                    fileWrites += MAX_RECORDS_PER_BLOCK;
+                    fwrite(&buffer[nmem_blocks-1], sizeof(record_t), 1,
+                           outputfile);
+                    fileWrites += buffer[nmem_blocks-1].nreserved;
                     cout<<"So far we've written: "<<fileWrites<<" records."<<endl;
                     //Empty the output buffer block
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));
@@ -214,7 +213,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 ++index[b];
                 if(index[b] == buffer[b].nreserved) { //If the buffer block has
                 //reached its end, read the next block from file
-                    if(readOpenFileBlock(b,currentFiles,buffer,names)) {
+                    if(fread(&buffer[b],sizeof(block_t),1,currentFiles[b])) {
                         index[b] = 0;
                     } //else the file has finished
                 }
@@ -232,7 +231,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             while(!pq.empty()) { //While there are more elements in the minheap
                 //cout<<"Remaining queue"<<endl;
                 //printRecord(*pq.top());
-                fwrite(pq.top(),1,sizeof(record_t),outputfile);
+                //fwrite(pq.top(),1,sizeof(record_t),outputfile);
                 //printRecord(*pq.top());
                 ++fileWrites;
                 pq.pop();
@@ -268,6 +267,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 void printRecord(record_t r) {
     printf("This is record id: %-5d, num: %-5d, str: %s\n",r.recid,r.num,r.str);
 }
+
 
 bool readBlock(unsigned b,vector<FILE*>& currentFiles,block_t *buffer) {
 //File is already open
