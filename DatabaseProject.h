@@ -16,6 +16,8 @@ std::string createFileName(unsigned fileNumber);
 
 void printRecord(record_t r);
 
+bool read(int number, unsigned b,std::vector<std::string>& names,std::vector<FILE*>&
+          currentFiles,block_t *buffer);
 bool readFileBlock(int number, unsigned b, std::vector<std::string>& names,
                    std::vector<FILE*>& files,block_t *buffer);
 

@@ -98,7 +98,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
     buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
     //Allocate disc space for records in buffer
     record_t *records = (record_t*)malloc(nmem_blocks*MAX_RECORDS_PER_BLOCK*sizeof(record_t));
-
     int recordsIndex = 0;
     int nreserved;
     unsigned fileNumber = 0; //The next number of file to be written on disc
@@ -134,8 +133,8 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         //Write buffer to file
         string name = createFileName(fileNumber);
         outputfile = fopen(name.c_str(), "wb");
-
         fwrite(records, recordsIndex, sizeof(record_t), outputfile);
+        //Files contain records, not whole blocks
         fclose(outputfile);
 
         //Emptying buffer
@@ -144,51 +143,69 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
     }
     fclose(inputfile); //Closing the initial file
     //N-WAY MERGE - STEP 1...N
-    unsigned phase = 0; //Number of phases for the merging
+    unsigned phase = 1; //Number of phases for the merging
     int filesInPhase = fileNumber;
-    int filesProducedInPhase = 0;
+    int filesProducedInPhase;
     int inputFileNumber = 1; //Current file number e.g.5
-    int outputFileNumber = filesInPhase+1; //Next number of name available e.g.segment6.bin
+    int outputFileNumber = filesInPhase+1; //Next number of name available
+    //e.g.segment6.bin
     int initialOutputFileNumber = outputFileNumber;
     do{ //While we have more than 1 file for the next round to merge -
-         //DO WHILE FOR TOTAL ROUNDS
-        vector<FILE*> currentFiles(nmem_blocks-1); //The current n-1 files of a block
-        vector<string> names(nmem_blocks-1); //The names of the open currentFiles
+        int nWrites = 0; //Number of writings to file
+        cout<<"Phase "<<phase<<endl;
+        filesProducedInPhase = 0;
+        //The current n-1 files of a block
+        vector<FILE*> currentFiles(nmem_blocks-1);
+        //The names of the open currentFiles
+        vector<string> names(nmem_blocks-1);
         int filesRead = 0; //Files read so far
         priority_queue<record_t*,vector<record_t*>, CompareRecordNum > pq;
-        //Keeps the index we are in each block, n-1 for input and the nth for output
+        //Keeps the current index of each block (both input and output blocks)
         vector<unsigned> index(nmem_blocks,0);
+
         while(filesRead < filesInPhase) {
+            int fileWrites = 0;
+            cout<<"Files read in phase so far: "<<filesRead<<endl<<
+            "Total files in phase: "<<filesInPhase<<endl;
         //While there are more current
         //files to be read in this round - WHILE FOR FILES IN ROUND
             string outputName = createFileName(outputFileNumber);
-            outputfile = fopen(outputName.c_str(), "ab"); //Opens file for appending
-            for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read their
-                //first block into n-1 buffer blocks
+            outputfile = fopen(outputName.c_str(), "wb");
+            for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read
+            //their first block into n-1 buffer blocks
                 if(inputFileNumber<initialOutputFileNumber &&
                    readFileBlock(inputFileNumber,b,names,currentFiles,buffer)) {
                     ++filesRead; //Each buffer block "reads" a different file
                     ++inputFileNumber; //Update the file number to be read next
                     buffer[b].entries[index[b]].blockID = b;
-                    pq.push(&buffer[b].entries[index[b]]); //Put a record inside the minheap
+                    //Put a record inside the minheap
+                    pq.push(&buffer[b].entries[index[b]]);
                 }
             }
             bool flag = true;
-            while(flag) { //While there is still at least one buffer block with records
+            //While there is still at least one buffer block with records
+            while(flag) {
                 flag = false;
                 if(buffer[nmem_blocks-1].nreserved == MAX_RECORDS_PER_BLOCK) {
-                //If output buffer is full, append it to file
-                    //Append buffer output block to file. If file doesn't exist open it.
-                    fwrite(&buffer[nmem_blocks-1].entries,buffer[nmem_blocks-1].
-                           nreserved, sizeof(record_t), outputfile);
+            //If output buffer is full, append it to file
+            //Append buffer output block to file. If file doesn't exist open it.
+                    cout<<"Buffer output block maxed out!"<<endl;
+                    /*for(int i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
+                        printRecord(buffer[nmem_blocks].entries[i]);
+                    }*/
+                    fwrite(buffer[nmem_blocks-1].entries, MAX_RECORDS_PER_BLOCK,
+                            sizeof(record_t), outputfile);
+                    fileWrites += MAX_RECORDS_PER_BLOCK;
+                    cout<<"So far we've written: "<<fileWrites<<" records."<<endl;
                     //Empty the output buffer block
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));
                     index[nmem_blocks-1] = 0;
-                    fclose(outputfile);
                 }
                 //Store the minimum record to buffer output block
                 memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
                        pq.top(),sizeof(record_t));
+
+                //printRecord(*pq.top());
                 ++buffer[nmem_blocks-1].nreserved;
                 ++index[nmem_blocks-1];
                 //printRecord(*pq.top());
@@ -204,36 +221,46 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 if(index[b] < buffer[b].nreserved) {
                     buffer[b].entries[index[b]].blockID = b;
                     pq.push(&buffer[b].entries[index[b]]);
+                    --buffer[b].dummy;
                 }
                 for(unsigned b=0; b<nmem_blocks-1; ++b) {
-                    if(buffer[b].nreserved != 0) {
+                    if(buffer[b].dummy != 0) {
                         flag = true;
                     }
                 }
             }
-            while(!pq.empty()) {
+            while(!pq.empty()) { //While there are more elements in the minheap
+                //cout<<"Remaining queue"<<endl;
+                //printRecord(*pq.top());
                 fwrite(pq.top(),1,sizeof(record_t),outputfile);
-                printRecord(*pq.top());
+                //printRecord(*pq.top());
+                ++fileWrites;
                 pq.pop();
             }
-
+            cout<<"Total number of writings to file "<<outputFileNumber<<" is "
+                <<fileWrites<<endl;
+            nWrites += fileWrites;
             ++outputFileNumber;
             ++filesProducedInPhase;
             fclose(outputfile);
-            for(unsigned i=0; i<nmem_blocks-1; ++i) {
+            for(unsigned i=0; i<nmem_blocks-1; ++i) { //Closing current files
                 fclose(currentFiles[i]);
             }
             memset(buffer,0,nmem_blocks*sizeof(block_t));
             for(unsigned b=0; b<nmem_blocks; ++b) {
-                index[b] = 0;
+                index[b] = 0; //Each block's index returns to 0
             }
         }
+        cout<<"Total number of writings in phase (should be 200): "
+            <<nWrites<<endl;
         phase+=1;
         fileNumber += filesProducedInPhase;
         outputFileNumber = inputFileNumber+filesProducedInPhase;
         initialOutputFileNumber = outputFileNumber;
         filesInPhase = filesProducedInPhase;
     } while(filesProducedInPhase!=1);
+    free(buffer);
+    phase-=1;
     npasses = &phase;
     nsorted_segs = &fileNumber;
 }
@@ -248,32 +275,38 @@ bool readBlock(unsigned b,vector<FILE*>& currentFiles,block_t *buffer) {
     buffer[b].nreserved = 0;
     buffer[b].valid = true;
     buffer[b].blockid = b;
-
+    buffer[b].dummy = 0;
+    bool flag = false;
     //Read all the records from the file's block to memory
-    for(unsigned rec=0; rec<MAX_RECORDS_PER_BLOCK; rec++) { //MAYBE BUG - PROBLEM IF FILE REACHES END?
+    for(unsigned rec=0; rec<MAX_RECORDS_PER_BLOCK; rec++) {
         if(fread(&buffer[b].entries[rec],sizeof(record_t),1,currentFiles[b]) == 1) {
             buffer[b].nreserved += 1;
-            printRecord(buffer[b].entries[rec]);
+            buffer[b].dummy+=1;
+            //printRecord(buffer[b].entries[rec]);
+            flag = true; //We've read at least one record
         } else {
-            return false;
+            if(!flag)
+                return false;
         }
     }
     return true;
 }
 
-bool readFileBlock(int number, unsigned b,vector<string>& names,vector<FILE*>& currentFiles,block_t *buffer) {
+bool readFileBlock(int number, unsigned b,vector<string>& names,vector<FILE*>&
+                   currentFiles,block_t *buffer) {
     names[b] = createFileName(number);
     if(!(currentFiles[b] = fopen(names[b].c_str(),"rb"))) {
         return false;
     }
 
-    cout<<"-----------FILE: "<<names[b]<<"-----------"<<endl;
+    cout<<"File to be read "<<names[b]<<endl;
     //Read all the records from the file's block to memory
     return readBlock(b,currentFiles,buffer);
 }
 
-bool readOpenFileBlock(unsigned b, vector<FILE*>& currentFiles,block_t *buffer,vector<string>& names) {
-    cout<<"-----------FILE: "<<names[b]<<"-----------"<<endl;
+bool readOpenFileBlock(unsigned b, vector<FILE*>& currentFiles,block_t *buffer,
+                       vector<string>& names) {
+    cout<<"File to be read "<<names[b]<<endl;
     return readBlock(b,currentFiles,buffer);
 }
 

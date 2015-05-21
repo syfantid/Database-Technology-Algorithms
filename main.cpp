@@ -39,11 +39,11 @@ int main(int argc, char** argv) {
 	fclose(outfile);
 	block_t *buffer = NULL;
 	char *outputfile = NULL;
-	unsigned int *segmentsNumber = NULL;
-	unsigned int *sortingPhases = NULL;
-	unsigned int *IOsNumber = NULL;
+	unsigned int segmentsNumber;
+	unsigned int sortingPhases;
+	unsigned int IOsNumber;
 	char filename[] = "file.bin";
-    MergeSort(filename,'1',buffer,4,outputfile,segmentsNumber,sortingPhases,IOsNumber);
+    MergeSort(filename,'1',buffer,4,outputfile,&segmentsNumber,&sortingPhases,&IOsNumber);
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
 	int nreserved;
