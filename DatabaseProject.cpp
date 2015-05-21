@@ -4,7 +4,7 @@
 #include <vector>
 #include <queue>
 #include <math.h>
-#include "MinHeap.h"
+
 using namespace std;
 
 struct CompareRecordID : public std::binary_function<record_t*, record_t*, bool>
@@ -266,8 +266,8 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 index[b] = 0; //Each block's index returns to 0
             }
         }
-        cout<<"Total number of writings in phase (should be 200): "
-            <<nWrites<<endl;
+        cout<<"Total number of writings in phase (should be 200): "<<nWrites
+            <<endl;
         phase+=1;
         fileNumber += filesProducedInPhase;
         outputFileNumber = inputFileNumber+filesProducedInPhase;
@@ -284,58 +284,11 @@ void printRecord(record_t r) {
     printf("This is record id: %-5d, num: %-5d, str: %s\n",r.recid,r.num,r.str);
 }
 
-
-bool readBlock(unsigned b,vector<FILE*>& currentFiles,block_t *buffer) {
-//File is already open
-    //Each buffer is assigned a specific file to process
-    buffer[b].nreserved = 0;
-    buffer[b].valid = true;
-    buffer[b].blockid = b;
-    buffer[b].dummy = 0;
-    bool flag = false;
-    //Read all the records from the file's block to memory
-    for(unsigned rec=0; rec<MAX_RECORDS_PER_BLOCK; rec++) {
-        if(fread(&buffer[b].entries[rec],sizeof(record_t),1,currentFiles[b]) == 1) {
-            buffer[b].nreserved += 1;
-            buffer[b].dummy+=1;
-            //printRecord(buffer[b].entries[rec]);
-            flag = true; //We've read at least one record
-        } else {
-            if(!flag)
-                return false;
-        }
-    }
-    return true;
-}
-
-bool readFileBlock(int number, unsigned b,vector<string>& names,vector<FILE*>&
-                   currentFiles,block_t *buffer) {
-    names[b] = createFileName(number);
-    if(!(currentFiles[b] = fopen(names[b].c_str(),"rb"))) {
-        return false;
-    }
-
-    cout<<"File to be read "<<names[b]<<endl;
-    //Read all the records from the file's block to memory
-    return readBlock(b,currentFiles,buffer);
-}
-
-bool readOpenFileBlock(unsigned b, vector<FILE*>& currentFiles,block_t *buffer,
-                       vector<string>& names) {
-    cout<<"File to be read "<<names[b]<<endl;
-    return readBlock(b,currentFiles,buffer);
-}
-
 string createFileName(unsigned fileNumber) {
     stringstream ss;
     ss << "segment" << fileNumber << ".bin";
     return ss.str();
 }
 
-/*bool operator > (const record_t& a, const record_t& b) {
-    return (a.num> b.num) ;
-}
-bool operator < (const record_t& a, const record_t& b) {
-    return (a.num < b.num) ;
-}*/
+
 

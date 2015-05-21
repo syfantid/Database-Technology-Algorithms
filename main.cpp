@@ -1,7 +1,5 @@
 #include "DatabaseProject.h"
 #include <iostream>
-#include "QuickSort.h"
-#include "MinHeap.h"
 
 using namespace std;
 
