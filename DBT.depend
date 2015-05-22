@@ -1,0 +1,32 @@
+# depslib dependency file v1.0
+1432314186 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
+	"DatabaseProject.h"
+	<iostream>
+	<sstream>
+	<vector>
+	<queue>
+	<math.h>
+
+1432219990 /home/sakis/Desktop/DBT/DatabaseProject.h
+	<cstdlib>
+	<cstdio>
+	<cstring>
+	<string>
+	<vector>
+	"dbtproj.h"
+
+1432219990 /home/sakis/Desktop/DBT/dbtproj.h
+
+1431978537 /home/sakis/Desktop/DBT/MinHeap.h
+	<iostream>
+	"MinHeap.inl"
+
+1431978537 /home/sakis/Desktop/DBT/MinHeap.inl
+	"MinHeap.h"
+
+1432314463 source:/home/sakis/Desktop/DBT/main.cpp
+	"DatabaseProject.h"
+	<iostream>
+
+1432226569 /home/sakis/Desktop/DBT/QuickSort.h
+

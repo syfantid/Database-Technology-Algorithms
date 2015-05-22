@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
 	FILE *infile, *outfile;
 
 	//Generate a file
-	outfile = fopen("file.bin", "wb");
+	outfile = fopen("file.bin", "w");
 
 	for (int b=0; b<nblocks; ++b) { // for each block
 

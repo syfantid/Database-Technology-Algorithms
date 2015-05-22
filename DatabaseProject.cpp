@@ -93,7 +93,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 unsigned int *nios) {
     //Open the file
     FILE *inputfile,*outputfile;
-    inputfile = fopen(infile,"rb");
+    inputfile = fopen(infile,"r");
     //Allocate memory to buffer
     buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
     //Allocate disc space for records in buffer
@@ -118,7 +118,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 recordsIndex++;
             }
         }
-
         //Sorts the records in the buffer based on the specified field
         if(field == '0')
             qsort(records,recordsIndex, sizeof(record_t), compareID);
@@ -133,7 +132,8 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         //Write buffer to file
         int recSecIndex=0;
         string name = createFileName(fileNumber);
-        outputfile = fopen(name.c_str(), "wb");
+        outputfile = fopen(name.c_str(), "w");
+
         for (unsigned b=0; b<nmem_blocks;b++)
         {
             for (int i=0;i<MAX_RECORDS_PER_BLOCK && recSecIndex<recordsIndex;i++)
@@ -159,7 +159,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
     //e.g.segment6.bin
     int initialOutputFileNumber = outputFileNumber;
     do{ //While we have more than 1 file for the next round to merge -
-        int nWrites = 0; //Number of records to file
+        int nWrites = 0; //Number of records of phase
         cout<<"Phase "<<phase<<endl;
         filesProducedInPhase = 0;
         //The current n-1 files of a block
@@ -226,7 +226,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 //reached its end, read the next block from file
                     if(fread(&buffer[b],sizeof(block_t),1,currentFiles[b])) {
                         index[b] = 0;
-                    } //else the file has finished
+                    }//else the file has finished
                 }
                 if(index[b] < buffer[b].nreserved) {
                     buffer[b].entries[index[b]].blockID = b;
@@ -234,7 +234,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                     --buffer[b].dummy;
                 }
                 for(unsigned b=0; b<nmem_blocks-1; ++b) {
-                    if(buffer[b].dummy != 0) {
+                    if(buffer[b].dummy != 0 ) {
                         flag = true;
                     }
                 }
@@ -242,7 +242,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             while(!pq.empty()) { //While there are more elements in the minheap
                 if(index[nmem_blocks-1] >= buffer[nmem_blocks-1].nreserved) {
                     buffer[nmem_blocks-1].dummy = buffer[nmem_blocks-1].nreserved;
-                    cout<<"Buffer output block maxed out!"<<endl;
+                    cout<<"Buffer output block maxed out2!"<<endl;
                     for(unsigned i=0; i<buffer[nmem_blocks-1].nreserved; ++i) {
                         printRecord(buffer[nmem_blocks-1].entries[i]);
                     }
@@ -283,11 +283,13 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         }
         cout<<"Total number of records in phase (should be 200): "<<nWrites
             <<endl;
+
         phase+=1;
         fileNumber += filesProducedInPhase;
         outputFileNumber = inputFileNumber+filesProducedInPhase;
         initialOutputFileNumber = outputFileNumber;
         filesInPhase = filesProducedInPhase;
+        cout<<"filesProducedInPhase"<<filesProducedInPhase<<endl;
     } while(filesProducedInPhase!=1);
     free(buffer);
     phase-=1;
