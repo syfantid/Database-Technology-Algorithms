@@ -8,9 +8,7 @@
 #include <vector>
 #include "dbtproj.h"
 
-bool operator > (const record_t& a, const record_t& b);
-
-bool operator < (const record_t& a, const record_t& b);
+bool operator == (const record_t& a, const record_t& b);
 
 std::string createFileName(unsigned fileNumber);
 
