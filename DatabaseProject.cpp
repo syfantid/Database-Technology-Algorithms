@@ -108,6 +108,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
     unsigned outindex = 0; //The index for the output buffer
     unsigned uniques = 0; //Number of unique records
 
+    cout<<"Eliminating Duplicates..."<<endl;
     while(!feof(inputfile)) { //while there are more blocks in the file
         //Read one sorted block at a time
         fread(&buffer[0], sizeof(block_t), 1, inputfile);
@@ -119,6 +120,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
             if(!(buffer[0].entries[i] == previous)) { //It's not a duplicate
                 //cout<<"-----------------------UNIQUE!"<<endl;
                 uniques += 1;
+                //printRecord(buffer[0].entries[i]);
                 if(outindex == MAX_RECORDS_PER_BLOCK) {
                     //If output buffer is full, append it to file
                     fwrite(&buffer[1], sizeof(block_t), 1, outputfile);

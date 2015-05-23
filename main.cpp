@@ -1,5 +1,6 @@
 #include "DatabaseProject.h"
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 
@@ -15,22 +16,23 @@ void gen_random_string(char *s, const int len) {
 
 int main(int argc, char** argv) {
 
+    srand(time(0)); //Pseudorandom number
 	int nblocks = 200;	// number of blocks in the file
 	record_t record;
 	block_t block;
 	unsigned int recid = 0;
 	FILE *infile, *outfile;
-
 	//----------------------GENERATION OF INITIAL FILE--------------------------
 	cout<<"Creating input file..."<<endl;
 	outfile = fopen("file.bin", "wb");
     char* s = new char[10];
+
 	for (int b=0; b<nblocks; ++b) { // for each block
 		block.blockid = b;
 		for (int r=0; r<MAX_RECORDS_PER_BLOCK; ++r) { // for each record
 			// prepare a record
 			record.recid = recid++;
-			record.num = rand() % 1000;
+			record.num = rand() % (nblocks*20);
             gen_random_string(s,10);
 			strcpy(record.str,s);   //Put a random string to each record
 			record.valid = true;
@@ -69,6 +71,8 @@ int main(int argc, char** argv) {
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the merge sort IOs): "<<IOsNumber<<endl;
     cout<<"OUTFILE: "<<outputfileunique<<endl;
+
+
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
 	int nreserved;
