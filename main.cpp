@@ -17,7 +17,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 200;	// number of blocks in the file
+	int nblocks = 15;	// number of blocks in the file
 	record_t record;
 	block_t block;
 	unsigned int recid = 0;

@@ -326,7 +326,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 ++filesProducedInPhase;
                 fclose(outputfile);
                 for(unsigned i=0; i<nmem_blocks-1; ++i) { //Closing current files
-                    fclose(currentFiles[i]);
+                    //fclose(currentFiles[i]); //I HAVE NO IDEA WHYYYYY
                     remove(names[i].c_str()); //So that the disc isn't full of
                     //not needed files
                 }

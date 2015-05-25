@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1432584367 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
+	"DatabaseProject.h"
+	<iostream>
+	<sstream>
+	<vector>
+	<queue>
+	<math.h>
+
+1432582218 /home/sakis/Desktop/DBT/DatabaseProject.h
+	<cstdlib>
+	<cstdio>
+	<cstring>
+	<string>
+	<vector>
+	"dbtproj.h"
+
+1432582218 /home/sakis/Desktop/DBT/dbtproj.h
+
+1432584560 source:/home/sakis/Desktop/DBT/main.cpp
+	"DatabaseProject.h"
+	<iostream>
+	<ctime>
+
