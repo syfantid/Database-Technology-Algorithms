@@ -367,10 +367,87 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
     FILE *inputFile_R, *inputFile_S,*outputFile;
     inputFile_R= fopen(outfile_R,"rb");
     inputFile_S= fopen(outfile_S,"rb");
+    outputFile=fopen(outfile,"wb");
     buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
+    fread(&buffer[0],sizeof(block_t),1,inputFile_R);
+    fread(&buffer[1],sizeof(block_t),1,inputFile_S);
+    int indexR=0;
+    int indexS=0;
+    int bufOutIndex=2;//the first 2 buffers are for the input files
+    int bufOutEntrIndex=0;
+    int result=0;
+    while(!feof(inputFile_R) && !feof(inputFile_S))
+    {
+        if(bufOutIndex<nmem_blocks)
+        {
 
 
-}
+            if(indexR<buffer[0].nreserved)
+            {
+                if (indexS<buffer[1].nreserved)
+                {
+
+                    if(field==0)
+                    {
+                        result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
+
+                    }
+                    else if(field==1)
+                    {
+                        result= compareNUM(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
+
+                    }
+                    else if(field==2)
+                    {
+                        result= compareSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
+                    }
+                    else if(field==3)
+                    {
+                        result= compareNUMSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
+                    }
+
+
+                    if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK)
+                    {
+                        if(bufOutIndex<=nmem_blocks-1)
+                        {
+                            bufOutIndex++;
+                        }
+                        else
+                        {
+                            for(int k=2;k<nmem_blocks;k++)
+                            {
+                                fwrite(&buffer[k],sizeof(block_t),1,outputFile);
+                                memset(&buffer[k],0,sizeof(block_t));
+                            }
+
+                        }
+                    }
+                    if (result==-1)
+                    {
+
+                        buffer[bufOutIndex].entries[bufOutEntrIndex]=buffer[0].entries[indexR];
+                        bufOutEntrIndex++;
+                    }
+                    else if(result==1)
+                    {
+
+                        buffer[bufOutIndex].entries[bufOutEntrIndex]=buffer[1].entries[indexS];
+                        bufOutEntrIndex++;
+                    }
+                    else
+                    {
+                         //to join twn 2!
+                    }
+                }
+            }
+        }
+    }
+
+    }
+
+
+
 
 
 void printRecord(record_t r) {
