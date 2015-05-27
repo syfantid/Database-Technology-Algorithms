@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1432584367 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
+1432584872 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
 	"DatabaseProject.h"
 	<iostream>
 	<sstream>
@@ -21,4 +21,10 @@
 	"DatabaseProject.h"
 	<iostream>
 	<ctime>
+
+1392363176 source:/home/sakis/Desktop/DBT/HashTable.cpp
+	"HashTable.h"
+	<iostream>
+
+1392363164 /home/sakis/Desktop/DBT/HashTable.h
 

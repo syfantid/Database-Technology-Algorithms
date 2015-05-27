@@ -34,6 +34,8 @@
 		</Compiler>
 		<Unit filename="DatabaseProject.cpp" />
 		<Unit filename="DatabaseProject.h" />
+		<Unit filename="HashTable.cpp" />
+		<Unit filename="HashTable.h" />
 		<Unit filename="dbtproj.h" />
 		<Unit filename="file.bin" />
 		<Unit filename="main.cpp" />

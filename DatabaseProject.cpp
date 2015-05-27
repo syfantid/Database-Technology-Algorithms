@@ -352,6 +352,26 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         exit(0);
     }
 }
+void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buffer, unsigned int nmem_blocks, char *outfile, unsigned int *nres, unsigned int *nios)
+{
+    char *outfile_R= new char[30];
+    char *outfile_S= new char[30];
+    unsigned int nsorted_segs_R;
+    unsigned int npasses_R;
+    unsigned int nios_R;
+    unsigned int nsorted_segs_S;
+    unsigned int npasses_S;
+    unsigned int nios_S;
+    MergeSort(infile1,field,buffer,nmem_blocks,outfile_R,&nsorted_segs_R,&npasses_R,&nios_R);
+    MergeSort(infile2,field,buffer,nmem_blocks,outfile_S,&nsorted_segs_S,&npasses_S,&nios_S);
+    FILE *inputFile_R, *inputFile_S,*outputFile;
+    inputFile_R= fopen(outfile_R,"rb");
+    inputFile_S= fopen(outfile_S,"rb");
+    buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
+
+
+}
+
 
 void printRecord(record_t r) {
     printf("This is record id: %-5d, num: %-5d, str: %s\n",r.recid,r.num,r.str);
