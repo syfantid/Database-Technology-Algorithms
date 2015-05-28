@@ -93,16 +93,16 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	unsigned int sortingPhases;
 
 	unsigned int IOsNumber; //#of IOs performed including these of merge sort
-
-    MergeSort(infile,field,buffer,nmem_blocks,outfile,&segmentsNumber,&sortingPhases,
+    char *outofMerge= new char[30];
+    MergeSort(infile,field,buffer,nmem_blocks,outofMerge,&segmentsNumber,&sortingPhases,
               &IOsNumber);
 
     //Allocate memory to buffer; We need 2 blocks, 1 for input and 1 for output
     buffer = (block_t *) malloc (sizeof(block_t)*2);
     //Open file for reading
     FILE *inputfile, *outputfile;
-    inputfile = fopen(outfile,"rb"); //Open the sorted file for reading
-    outputfile = fopen("NoDuplicates.bin","wb"); //Open a file for output
+    inputfile = fopen(outofMerge,"rb"); //Open the sorted file for reading
+    outputfile = fopen(outfile,"wb"); //Open a file for output
     //Always keeping the previous record we read
     record_t previous;
     unsigned outindex = 0; //The index for the output buffer
@@ -144,7 +144,6 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
     free(buffer);
     *nunique = uniques;
     *nios = IOsNumber;
-    strcpy(outfile, "NoDuplicates.bin");
 
 
 }
@@ -354,95 +353,161 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 }
 void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buffer, unsigned int nmem_blocks, char *outfile, unsigned int *nres, unsigned int *nios)
 {
-    char *outfile_R= new char[30];
-    char *outfile_S= new char[30];
+    char *mergeOutFile_R= new char[30];
+    char *mergeOutFile_S= new char[30];
+    char outfile_R[]= "1outfile.bin";
+    char outfile_S[]= "2outfile.bin";
+
     unsigned int nsorted_segs_R;
     unsigned int npasses_R;
     unsigned int nios_R;
     unsigned int nsorted_segs_S;
     unsigned int npasses_S;
     unsigned int nios_S;
-    MergeSort(infile1,field,buffer,nmem_blocks,outfile_R,&nsorted_segs_R,&npasses_R,&nios_R);
-    MergeSort(infile2,field,buffer,nmem_blocks,outfile_S,&nsorted_segs_S,&npasses_S,&nios_S);
+    unsigned int nunique_R;
+    unsigned int nunique_S;
+    unsigned int niosD_R;
+    unsigned int niosD_S;
+    //MergeSort(infile1,field,buffer,nmem_blocks,mergeOutFile_R,&nsorted_segs_R,&npasses_R,&nios_R);
+    //MergeSort(infile2,field,buffer,nmem_blocks,mergeOutFile_S,&nsorted_segs_S,&npasses_S,&nios_S);
+    EliminateDuplicates(infile1,field,buffer,nmem_blocks,outfile_R,&nunique_R,&niosD_R);
+    EliminateDuplicates(infile2,field,buffer,nmem_blocks,outfile_S,&nunique_S,&niosD_S);
     FILE *inputFile_R, *inputFile_S,*outputFile;
-    inputFile_R= fopen(outfile_R,"rb");
-    inputFile_S= fopen(outfile_S,"rb");
-    outputFile=fopen(outfile,"wb");
+    inputFile_R= fopen(outfile_R,"r");
+    cout<<outfile_R<<endl;
+    inputFile_S= fopen(outfile_S,"r");
+    outputFile=fopen(outfile,"w");
     buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
     fread(&buffer[0],sizeof(block_t),1,inputFile_R);
     fread(&buffer[1],sizeof(block_t),1,inputFile_S);
-    int indexR=0;
-    int indexS=0;
-    int bufOutIndex=2;//the first 2 buffers are for the input files
+    unsigned int indexR=0;
+    unsigned int indexS=0;
+    unsigned int bufOutIndex=2;//the first 2 buffers are for the input files
     int bufOutEntrIndex=0;
     int result=0;
-    while(!feof(inputFile_R) && !feof(inputFile_S))
+    unsigned int blockID=0;
+    int counter=0;
+    while(!feof(inputFile_R))//end of input files
     {
-        if(bufOutIndex<nmem_blocks)
+
+        if(bufOutIndex<nmem_blocks)//end of out buffers
         {
 
-
-            if(indexR<buffer[0].nreserved)
+            if(indexR<=buffer[0].nreserved-1)//index of first file smaller than entries
             {
-                if (indexS<buffer[1].nreserved)
+                if (indexS<=buffer[1].nreserved-1)//index of second file
                 {
-
-                    if(field==0)
+                    if(field==0)//join with ID
                     {
+
                         result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 
                     }
-                    else if(field==1)
+                    else if(field==1)//join with num
                     {
                         result= compareNUM(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 
                     }
-                    else if(field==2)
+                    else if(field==2)//join with STR
                     {
                         result= compareSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
                     }
-                    else if(field==3)
+                    else if(field==3)//join with num and STR
                     {
                         result= compareNUMSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
                     }
 
-
-                    if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK)
+                    //cout<<result<<endl;
+                    if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK)//if out buffer is full
                     {
-                        if(bufOutIndex<=nmem_blocks-1)
+                        //cout<<"5"<<endl;
+                        if(bufOutIndex<=nmem_blocks-1)//if there is available outbuffer index
                         {
+                            //cout<<"1"<<endl;
                             bufOutIndex++;
+                            bufOutEntrIndex=0;
+
                         }
-                        else
+                        else//if not
                         {
-                            for(int k=2;k<nmem_blocks;k++)
+                            for(unsigned int k=2;k<nmem_blocks;k++)//write the buffers to file
                             {
+                                //cout<<"2"<<endl;
+                                buffer[k].blockid=blockID;
+                                blockID++;
+                                buffer[k].valid=true;
+                                buffer[k].nreserved= MAX_RECORDS_PER_BLOCK;
                                 fwrite(&buffer[k],sizeof(block_t),1,outputFile);
-                                memset(&buffer[k],0,sizeof(block_t));
+                                memset(&buffer[k],0,sizeof(block_t));//flush the buffer
                             }
+                            bufOutIndex=2;
+                            bufOutEntrIndex=0;
 
                         }
-                    }
-                    if (result==-1)
-                    {
-
-                        buffer[bufOutIndex].entries[bufOutEntrIndex]=buffer[0].entries[indexR];
-                        bufOutEntrIndex++;
-                    }
-                    else if(result==1)
-                    {
-
-                        buffer[bufOutIndex].entries[bufOutEntrIndex]=buffer[1].entries[indexS];
-                        bufOutEntrIndex++;
                     }
                     else
                     {
-                         //to join twn 2!
+                        if (result==-1)//R file's record is smaller than S file's record (sorted with mergesort);
+                        {
+                            indexR++;//next record of R file
+                            cout<<"-1"<<endl;
+                        }
+                        else if(result==1)//S file's record is smaller than R file's record
+                        {
+                            cout<<"1"<<endl;
+                            indexS++;//next record of S file
+                        }
+                        else
+                        {
+                                cout<<"1"<<endl;
+                             memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
+                             printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
+                             indexR++;
+                             indexS++;
+                             bufOutEntrIndex++;
+
+
+                        }
                     }
                 }
+                else
+                {
+                    memset(&buffer[1],0,sizeof(block_t));
+                    fread(&buffer[1],sizeof(block_t),1,inputFile_S);
+                    if (buffer[1].nreserved==0)
+                    {
+                        break;
+                    }
+                    indexS=0;
+                }
+            }
+            else
+            {
+                memset(&buffer[0],0,sizeof(block_t));
+                fread(&buffer[0],sizeof(block_t),1,inputFile_R);
+                if (buffer[0].nreserved==0)
+                {
+                    break;
+                }
+                indexR=0;
             }
         }
     }
+    for(unsigned int k=2;k<nmem_blocks;k++)//write the remaining buffers to file
+    {
+        if(buffer[k].nreserved!=0)
+        {
+            buffer[k].blockid=blockID;
+            blockID++;
+            buffer[k].valid=true;
+            buffer[k].nreserved= MAX_RECORDS_PER_BLOCK;
+            fwrite(&buffer[k],sizeof(block_t),1,outputFile);
+            memset(&buffer[k],0,sizeof(block_t));//flush the buffer
+        }
+    }
+    fclose(inputFile_R);
+    fclose(inputFile_S);
+    fclose(outputFile);
 
     }
 

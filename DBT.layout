@@ -1,61 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-<<<<<<< HEAD
-	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="DatabaseProject.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1925" topLine="39" />
+			<Cursor1 position="17954" topLine="438" />
 		</Cursor>
 	</File>
-	<File name="HashTable.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="dbtproj.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="87" />
-		</Cursor>
-	</File>
-	<File name="DatabaseProject.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="4" />
-=======
-	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="49" topLine="19" />
->>>>>>> 803c6bf11f83b925aef47e62fffda394873fcaed
-		</Cursor>
-	</File>
-	<File name="DatabaseProject.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-<<<<<<< HEAD
-			<Cursor1 position="15495" topLine="283" />
-=======
-			<Cursor1 position="4056" topLine="0" />
->>>>>>> 803c6bf11f83b925aef47e62fffda394873fcaed
-		</Cursor>
-		<Folding>
-			<Collapse line="10" />
-			<Collapse line="37" />
-			<Collapse line="50" />
-			<Collapse line="62" />
-			<Collapse line="74" />
-		</Folding>
-	</File>
-<<<<<<< HEAD
-	<File name="HashTable.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-=======
-	<File name="DatabaseProject.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="179" topLine="0" />
->>>>>>> 803c6bf11f83b925aef47e62fffda394873fcaed
-		</Cursor>
-	</File>
-	<File name="dbtproj.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-<<<<<<< HEAD
-			<Cursor1 position="2284" topLine="37" />
-=======
-			<Cursor1 position="545" topLine="42" />
->>>>>>> 803c6bf11f83b925aef47e62fffda394873fcaed
+			<Cursor1 position="0" topLine="64" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

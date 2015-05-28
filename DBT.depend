@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1432584872 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
+1432835477 source:/home/sakis/Desktop/DBT/DatabaseProject.cpp
 	"DatabaseProject.h"
 	<iostream>
 	<sstream>
@@ -15,20 +15,21 @@
 	<vector>
 	"dbtproj.h"
 
-1432582218 /home/sakis/Desktop/DBT/dbtproj.h
+1432835338 /home/sakis/Desktop/DBT/dbtproj.h
 
-1432584560 source:/home/sakis/Desktop/DBT/main.cpp
+1432835320 source:/home/sakis/Desktop/DBT/main.cpp
 	"DatabaseProject.h"
 	<iostream>
 	<ctime>
 
-<<<<<<< HEAD
+1432584560 D
+
 1392363176 source:/home/sakis/Desktop/DBT/HashTable.cpp
 	"HashTable.h"
 	<iostream>
 
 1392363164 /home/sakis/Desktop/DBT/HashTable.h
-=======
+
 1432592788 source:c:\users\sofia\documents\database implemantation\databaseproject.cpp
 	"DatabaseProject.h"
 	<iostream>
@@ -51,5 +52,6 @@
 	"DatabaseProject.h"
 	<iostream>
 	<ctime>
->>>>>>> 803c6bf11f83b925aef47e62fffda394873fcaed
+
+1432594234 c6bf11f83b925aef47e62fffda394873fcaed
 
