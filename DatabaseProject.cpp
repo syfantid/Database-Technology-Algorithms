@@ -346,6 +346,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
         *nios = ios;
         string str = createFileName(fileNumber);
         strcpy(outfile, str.c_str());
+        //free(records);
     } else {
         cout<<"The buffer size is too small!"<<endl;
         exit(0);
@@ -353,33 +354,28 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 }
 void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buffer, unsigned int nmem_blocks, char *outfile, unsigned int *nres, unsigned int *nios)
 {
-    char *mergeOutFile_R= new char[30];
-    char *mergeOutFile_S= new char[30];
     char outfile_R[]= "1outfile.bin";
     char outfile_S[]= "2outfile.bin";
 
-    unsigned int nsorted_segs_R;
-    unsigned int npasses_R;
-    unsigned int nios_R;
-    unsigned int nsorted_segs_S;
-    unsigned int npasses_S;
-    unsigned int nios_S;
     unsigned int nunique_R;
     unsigned int nunique_S;
     unsigned int niosD_R;
     unsigned int niosD_S;
+    int numberofIOS=0;
     //MergeSort(infile1,field,buffer,nmem_blocks,mergeOutFile_R,&nsorted_segs_R,&npasses_R,&nios_R);
     //MergeSort(infile2,field,buffer,nmem_blocks,mergeOutFile_S,&nsorted_segs_S,&npasses_S,&nios_S);
     EliminateDuplicates(infile1,field,buffer,nmem_blocks,outfile_R,&nunique_R,&niosD_R);
     EliminateDuplicates(infile2,field,buffer,nmem_blocks,outfile_S,&nunique_S,&niosD_S);
+    numberofIOS=numberofIOS+niosD_R+niosD_S;
     FILE *inputFile_R, *inputFile_S,*outputFile;
     inputFile_R= fopen(outfile_R,"r");
     cout<<outfile_R<<endl;
     inputFile_S= fopen(outfile_S,"r");
-    outputFile=fopen(outfile,"w");
+    outputFile=fopen(outfile,"wb");
     buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
     fread(&buffer[0],sizeof(block_t),1,inputFile_R);
     fread(&buffer[1],sizeof(block_t),1,inputFile_S);
+    numberofIOS= numberofIOS+2;
     unsigned int indexR=0;
     unsigned int indexS=0;
     unsigned int bufOutIndex=2;//the first 2 buffers are for the input files
@@ -438,6 +434,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                                 buffer[k].valid=true;
                                 buffer[k].nreserved= MAX_RECORDS_PER_BLOCK;
                                 fwrite(&buffer[k],sizeof(block_t),1,outputFile);
+                                numberofIOS++;//each writing
                                 memset(&buffer[k],0,sizeof(block_t));//flush the buffer
                             }
                             bufOutIndex=2;
@@ -461,10 +458,12 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                         {
 
                              memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
-                             printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
+                             //printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
+                             cout<<"l"<<endl;
                              indexR++;
                              indexS++;
                              bufOutEntrIndex++;
+                             counter++;
 
 
                         }
@@ -474,6 +473,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                 {
                     memset(&buffer[1],0,sizeof(block_t));
                     fread(&buffer[1],sizeof(block_t),1,inputFile_S);
+                    numberofIOS++; //reading
                     if (buffer[1].nreserved==0)
                     {
                         break;
@@ -485,6 +485,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
             {
                 memset(&buffer[0],0,sizeof(block_t));
                 fread(&buffer[0],sizeof(block_t),1,inputFile_R);
+                numberofIOS++; //reading
                 if (buffer[0].nreserved==0)
                 {
                     break;
@@ -502,12 +503,16 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
             buffer[k].valid=true;
             buffer[k].nreserved= MAX_RECORDS_PER_BLOCK;
             fwrite(&buffer[k],sizeof(block_t),1,outputFile);
+            numberofIOS++; //writing
             memset(&buffer[k],0,sizeof(block_t));//flush the buffer
         }
     }
+    free(buffer);
     fclose(inputFile_R);
     fclose(inputFile_S);
     fclose(outputFile);
+    *nres=counter;
+    *nios=numberofIOS;
 
     }
 

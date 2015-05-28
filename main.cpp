@@ -17,7 +17,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 15;	// number of blocks in the file
+	int nblocks = 6000;	// number of blocks in the file
 	record_t record;
 	block_t block;
 	unsigned int recid = 0;
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 			// prepare a record
 			record.recid = recid++;
 			record.num = rand() % (nblocks*20);
-            gen_random_string(s,10);
+            gen_random_string(s,4);
 			strcpy(record.str,s);//Put a random string to each record
 			if (r==50)
             {
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 			// prepare a record
 			record.recid = recid++;
 			record.num = rand() % (nblocks*20);
-            gen_random_string(v,10);
+            gen_random_string(v,4);
 			strcpy(record.str,v);   //Put a random string to each record
 			if (r==50)
             {
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 	unsigned int sortingPhases;
 	unsigned int IOsNumber;
 	char filename[] = "file.bin";
-    MergeSort(filename,'1',buffer,5,outputfile,&segmentsNumber,&sortingPhases,
+    MergeSort(filename,'1',buffer,20,outputfile,&segmentsNumber,&sortingPhases,
               &IOsNumber);
     cout<<"TOTAL PASSES: "<<sortingPhases<<endl;
     cout<<"SORTED SEGMENTS: "<<segmentsNumber<<endl;
@@ -94,9 +94,9 @@ int main(int argc, char** argv) {
 
     //-------------------------ELIMINATE DUPLICATES-----------------------------
     cout<<endl<<"--------------ELIMINATE DUPLICATES---------------"<<endl<<endl;
-    char outputfileunique[] = "NOduplicates.bin"; //Big enough for a file name
+    char outputfileunique[] = "NOduplicates.bin";
     unsigned int uniquerecords;
-    EliminateDuplicates (filename, '2', buffer,5, outputfileunique,&uniquerecords,
+    EliminateDuplicates (filename, '2', buffer,20, outputfileunique,&uniquerecords,
                          &IOsNumber);
     cout<<"UNIQUE RECORDS: "<<uniquerecords<<" OUT OF "
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
@@ -113,7 +113,9 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'2',buffer,4,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'1',buffer,20,outmerge,&nres,&nios);
+    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
+    cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
 	int nreserved;
