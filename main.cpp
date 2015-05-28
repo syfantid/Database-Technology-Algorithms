@@ -17,7 +17,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 3;	// number of blocks in the file
+	int nblocks = 15;	// number of blocks in the file
 	record_t record;
 	block_t block;
 	unsigned int recid = 0;
@@ -34,7 +34,11 @@ int main(int argc, char** argv) {
 			record.recid = recid++;
 			record.num = rand() % (nblocks*20);
             gen_random_string(s,10);
-			strcpy(record.str,s);   //Put a random string to each record
+			strcpy(record.str,s);//Put a random string to each record
+			if (r==50)
+            {
+                strcpy(record.str,"kalimera");
+            }
 			record.valid = true;
 
 			memcpy(&block.entries[r], &record, sizeof(record_t)); // copy record to block
@@ -58,6 +62,10 @@ int main(int argc, char** argv) {
 			record.num = rand() % (nblocks*20);
             gen_random_string(v,10);
 			strcpy(record.str,v);   //Put a random string to each record
+			if (r==50)
+            {
+                strcpy(record.str,"kalimera");//to check merge join
+            }
 			record.valid = true;
 
 			memcpy(&block.entries[r], &record, sizeof(record_t)); // copy record to block
@@ -88,7 +96,7 @@ int main(int argc, char** argv) {
     cout<<endl<<"--------------ELIMINATE DUPLICATES---------------"<<endl<<endl;
     char outputfileunique[] = "NOduplicates.bin"; //Big enough for a file name
     unsigned int uniquerecords;
-    EliminateDuplicates (filename, '2', buffer,4, outputfileunique,&uniquerecords,
+    EliminateDuplicates (filename, '2', buffer,5, outputfileunique,&uniquerecords,
                          &IOsNumber);
     cout<<"UNIQUE RECORDS: "<<uniquerecords<<" OUT OF "
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
@@ -105,9 +113,9 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'1',buffer,4,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'2',buffer,4,outmerge,&nres,&nios);
 	// open file and print contents
-	infile = fopen("file.bin", "r");
+	/*infile = fopen("file.bin", "r");
 	int nreserved;
 	while (!feof(infile)) { // while end-of-file has not been reached ...
 
@@ -135,7 +143,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	fclose(infile);
+	fclose(infile);*/
 
 	return 0;
 }

@@ -397,22 +397,22 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
             {
                 if (indexS<=buffer[1].nreserved-1)//index of second file
                 {
-                    if(field==0)//join with ID
+                    if(field=='0')//join with ID
                     {
 
                         result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 
                     }
-                    else if(field==1)//join with num
+                    else if(field=='1')//join with num
                     {
                         result= compareNUM(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 
                     }
-                    else if(field==2)//join with STR
+                    else if(field=='2')//join with STR
                     {
                         result= compareSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
                     }
-                    else if(field==3)//join with num and STR
+                    else if(field=='3')//join with num and STR
                     {
                         result= compareNUMSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
                     }
@@ -421,7 +421,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                     if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK)//if out buffer is full
                     {
                         //cout<<"5"<<endl;
-                        if(bufOutIndex<=nmem_blocks-1)//if there is available outbuffer index
+                        if(bufOutIndex<nmem_blocks-1)//if there is available outbuffer index
                         {
                             //cout<<"1"<<endl;
                             bufOutIndex++;
@@ -450,16 +450,16 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                         if (result==-1)//R file's record is smaller than S file's record (sorted with mergesort);
                         {
                             indexR++;//next record of R file
-                            cout<<"-1"<<endl;
+                            //cout<<"-1"<<endl;
                         }
                         else if(result==1)//S file's record is smaller than R file's record
                         {
-                            cout<<"1"<<endl;
+                            //cout<<"1"<<endl;
                             indexS++;//next record of S file
                         }
                         else
                         {
-                                cout<<"1"<<endl;
+
                              memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
                              printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
                              indexR++;
