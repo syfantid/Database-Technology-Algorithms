@@ -17,65 +17,62 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 6000;	// number of blocks in the file
-	record_t record;
-	block_t block;
+	int nblocks = 2000;	// number of blocks in the file
+
+	record_t record1;
+	record_t record2;
+
+	block_t block1;
+	block_t block2;
+
 	unsigned int recid = 0;
-	FILE *infile, *outfile;
+	FILE *infile, *outfile, *outfile2;
 	//----------------------GENERATION OF INITIAL FILES--------------------------
-	cout<<"Creating first input file..."<<endl;
+	cout<<"Creating input files..."<<endl;
 	outfile = fopen("file.bin", "wb");
+	outfile2 = fopen("file2.bin", "wb");
+
     char* s = new char[10];
 
 	for (int b=0; b<nblocks; ++b) { // for each block
-		block.blockid = b;
+		block1.blockid = b;
+		block2.blockid = b;
 		for (int r=0; r<MAX_RECORDS_PER_BLOCK; ++r) { // for each record
-			// prepare a record
-			record.recid = recid++;
-			record.num = rand() % (nblocks*20);
-            gen_random_string(s,4);
-			strcpy(record.str,s);//Put a random string to each record
+			// prepare a record for file 1
+			record1.recid = recid;
+			record1.num = rand() % (nblocks*20);
+            gen_random_string(s,5);
+			strcpy(record1.str,s);//Put a random string to each record
+
+			// prepare a record for file 2
+			record2.recid = recid++;
+			record2.num = rand() % (nblocks*20);
+            gen_random_string(s,5);
+			strcpy(record2.str,s);//Put a random string to each record
+
 			if (r==50)
             {
-                strcpy(record.str,"kalimera");
+                strcpy(record1.str,"kalimera");
+                strcpy(record2.str,"kalimera");
             }
-			record.valid = true;
-
-			memcpy(&block.entries[r], &record, sizeof(record_t)); // copy record to block
+			record1.valid = true;
+			record2.valid = true;
+            // copy records to block
+            memcpy(&block1.entries[r], &record1, sizeof(record_t));
+			memcpy(&block2.entries[r], &record2, sizeof(record_t));
 		}
-		block.nreserved = MAX_RECORDS_PER_BLOCK;
-		block.valid = true;
-		block.dummy = MAX_RECORDS_PER_BLOCK;
-		fwrite(&block, 1, sizeof(block_t), outfile);	// write the block to the file
+		block1.nreserved = MAX_RECORDS_PER_BLOCK;
+		block1.valid = true;
+		block1.dummy = MAX_RECORDS_PER_BLOCK;
+		fwrite(&block1, 1, sizeof(block_t), outfile); // write the block to the file
+
+		block2.nreserved = MAX_RECORDS_PER_BLOCK;
+		block2.valid = true;
+		block2.dummy = MAX_RECORDS_PER_BLOCK;
+		fwrite(&block2, 1, sizeof(block_t), outfile2); // write the block to the file
 	}
 	fclose(outfile);
-	cout<<"Creating Second Input File"<<endl;
-	recid=0;
-	outfile = fopen("file2.bin", "wb");
-    char* v = new char[10];
-
-	for (int b=0; b<nblocks; ++b) { // for each block
-		block.blockid = b;
-		for (int r=0; r<MAX_RECORDS_PER_BLOCK; ++r) { // for each record
-			// prepare a record
-			record.recid = recid++;
-			record.num = rand() % (nblocks*20);
-            gen_random_string(v,4);
-			strcpy(record.str,v);   //Put a random string to each record
-			if (r==50)
-            {
-                strcpy(record.str,"kalimera");//to check merge join
-            }
-			record.valid = true;
-
-			memcpy(&block.entries[r], &record, sizeof(record_t)); // copy record to block
-		}
-		block.nreserved = MAX_RECORDS_PER_BLOCK;
-		block.valid = true;
-		block.dummy = MAX_RECORDS_PER_BLOCK;
-		fwrite(&block, 1, sizeof(block_t), outfile);	// write the block to the file
-	}
-	fclose(outfile);
+	fclose(outfile2);
 
 	//-----------------------------MERGE SORT-----------------------------------
 	cout<<endl<<"--------------------MERGE SORT-------------------"<<endl<<endl;
@@ -85,7 +82,7 @@ int main(int argc, char** argv) {
 	unsigned int sortingPhases;
 	unsigned int IOsNumber;
 	char filename[] = "file.bin";
-    MergeSort(filename,'1',buffer,20,outputfile,&segmentsNumber,&sortingPhases,
+    MergeSort(filename,'1',buffer,10,outputfile,&segmentsNumber,&sortingPhases,
               &IOsNumber);
     cout<<"TOTAL PASSES: "<<sortingPhases<<endl;
     cout<<"SORTED SEGMENTS: "<<segmentsNumber<<endl;
@@ -96,7 +93,7 @@ int main(int argc, char** argv) {
     cout<<endl<<"--------------ELIMINATE DUPLICATES---------------"<<endl<<endl;
     char outputfileunique[] = "NOduplicates.bin";
     unsigned int uniquerecords;
-    EliminateDuplicates (filename, '2', buffer,20, outputfileunique,&uniquerecords,
+    EliminateDuplicates (filename, '2', buffer,10, outputfileunique,&uniquerecords,
                          &IOsNumber);
     cout<<"UNIQUE RECORDS: "<<uniquerecords<<" OUT OF "
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
@@ -113,7 +110,7 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'1',buffer,20,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'1',buffer,10,outmerge,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 	// open file and print contents

@@ -215,6 +215,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
             recordsIndex = 0;
         }
         fclose(inputfile); //Closing the initial file
+        free(records);
         //N-WAY MERGE - STEP 1...N
         unsigned phase = 1; //Number of phases for the merging
         int filesInPhase = fileNumber;
@@ -325,9 +326,9 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 ++filesProducedInPhase;
                 fclose(outputfile);
                 for(unsigned i=0; i<nmem_blocks-1; ++i) { //Closing current files
-                    //fclose(currentFiles[i]); //I HAVE NO IDEA WHYYYYY
-                    remove(names[i].c_str()); //So that the disc isn't full of
-                    //not needed files
+                    fclose(currentFiles[i]);
+                    remove(names[i].c_str()); //Deleting current files, so that
+                    //the disc isn't full of not needed files
                 }
                 memset(buffer,0,nmem_blocks*sizeof(block_t));
                 for(unsigned b=0; b<nmem_blocks; ++b) {
