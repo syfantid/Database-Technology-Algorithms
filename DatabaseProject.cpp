@@ -326,7 +326,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                 ++filesProducedInPhase;
                 fclose(outputfile);
                 for(unsigned i=0; i<nmem_blocks-1; ++i) { //Closing current files
-                    fclose(currentFiles[i]);
                     remove(names[i].c_str()); //Deleting current files, so that
                     //the disc isn't full of not needed files
                 }
@@ -460,7 +459,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 
                              memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
                              //printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
-                             cout<<"l"<<endl;
+                             //cout<<"l"<<endl;
                              indexR++;
                              indexS++;
                              bufOutEntrIndex++;
