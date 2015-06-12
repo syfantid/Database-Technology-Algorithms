@@ -17,7 +17,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 2000;	// number of blocks in the file
+	int nblocks = 500;	// number of blocks in the file
 
 	record_t record1;
 	record_t record2;
@@ -82,23 +82,23 @@ int main(int argc, char** argv) {
 	unsigned int sortingPhases;
 	unsigned int IOsNumber;
 	char filename[] = "file.bin";
-    MergeSort(filename,'1',buffer,10,outputfile,&segmentsNumber,&sortingPhases,
+    /*MergeSort(filename,'1',buffer,50,outputfile,&segmentsNumber,&sortingPhases,
               &IOsNumber);
     cout<<"TOTAL PASSES: "<<sortingPhases<<endl;
     cout<<"SORTED SEGMENTS: "<<segmentsNumber<<endl;
     cout<<"NUMBER OF IOs: "<<IOsNumber<<endl;
-    cout<<"OUTFILE: "<<outputfile<<endl;
+    cout<<"OUTFILE: "<<outputfile<<endl;*/
 
     //-------------------------ELIMINATE DUPLICATES-----------------------------
-    cout<<endl<<"--------------ELIMINATE DUPLICATES---------------"<<endl<<endl;
+    /*cout<<endl<<"--------------ELIMINATE DUPLICATES---------------"<<endl<<endl;
     char outputfileunique[] = "NOduplicates.bin";
     unsigned int uniquerecords;
-    EliminateDuplicates (filename, '2', buffer,10, outputfileunique,&uniquerecords,
+    EliminateDuplicates (filename, '2', buffer,20, outputfileunique,&uniquerecords,
                          &IOsNumber);
     cout<<"UNIQUE RECORDS: "<<uniquerecords<<" OUT OF "
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the merge sort IOs): "<<IOsNumber<<endl;
-    cout<<"OUTFILE: "<<outputfileunique<<endl;
+    cout<<"OUTFILE: "<<outputfileunique<<endl;*/
 
 
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'1',buffer,10,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'1',buffer,20,outmerge,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 	// open file and print contents

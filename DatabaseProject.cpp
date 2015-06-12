@@ -256,7 +256,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                         if(!feof(currentFiles[b])) {
                             ++filesRead; //Each buffer block "reads" a different file
                             ++inputFileNumber; //Update the file number to be read next
-                            buffer[b].entries[index[b]].blockID = b;
+                            buffer[b].entries[index[b]].dummy1 = b;
                             //Put a record inside the minheap
                             pq.push(&buffer[b].entries[index[b]]);
                             --buffer[b].dummy;
@@ -283,7 +283,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                         pq.top(),sizeof(record_t));
                     ++buffer[nmem_blocks-1].nreserved;
                     ++index[nmem_blocks-1];
-                    int b = ((record_t*)pq.top())->blockID;
+                    int b = ((record_t*)pq.top())->dummy1;
                     pq.pop();
                     ++index[b];
                     if(index[b] == buffer[b].nreserved) { //If the buffer block has
@@ -298,7 +298,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
                         }
                     }
                     if(index[b] < buffer[b].nreserved) {
-                        buffer[b].entries[index[b]].blockID = b;
+                        buffer[b].entries[index[b]].dummy1 = b;
                         pq.push(&buffer[b].entries[index[b]]);
                         --buffer[b].dummy;
                     }
