@@ -4,8 +4,10 @@
 #include <vector>
 #include <queue>
 #include <math.h>
+#include <unordered_map>
 
 using namespace std;
+
 
 struct CompareRecord : public std::binary_function<record_t*, record_t*, bool>
 {
@@ -515,6 +517,56 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
     *nios=numberofIOS;
 
     }
+
+void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffer, unsigned int nmem_blocks, char *outfile, unsigned int *nres, unsigned int *nios)
+{
+
+    FILE *in1, *in2;
+    in1= fopen(infile1,"r");
+    buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
+    unordered_map<unsigned int,int> m1;
+    unordered_map<char *,int> m2;//int dummy
+    unordered_map<unsigned int,vector<char *>> m3;//in case of field 1 or 2 , vector is dummy
+
+    while(!feof(in1)) {
+        //Read as many blocks as the buffer fits
+        fread(buffer, sizeof(block_t), 1, in1);
+
+        if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
+            break;
+        }
+        //For each block
+        for (unsigned b=0; b<nmem_blocks; b++) {
+            int nreserved = buffer[b].nreserved;
+            //For each record in the block
+            for (int i=0; i<nreserved; ++i) {
+                if(field == '0')
+                    m1.insert(make_pair(buffer[b].entries[i].recid,0));
+                else if(field == '1')
+                    m1.insert(make_pair(buffer[b].entries[i].num,0));
+                else if(field == '2')
+                    m2.insert(make_pair(buffer[b].entries[i].str,0));
+                else if(field == '3')
+                {
+                    unordered_map<unsigned int, vector<char *>>::const_iterator rec=m3.find(buffer[b].entries[i].num);
+                    if(rec != m3.end())//found
+                    {
+                        if (find((rec->second).begin(), (rec->second).end(), &buffer[b].entries[i].str)==(rec->second).end())
+                        {
+                            (rec->second).push_back(buffer[b].entries[i].str);
+                        }
+                    }
+                }
+            }
+        }
+}
+
+        //Sorts the records in the buffer based on the specified field
+
+
+
+}
+
 
 
 
