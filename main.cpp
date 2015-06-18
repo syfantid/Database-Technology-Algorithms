@@ -1,6 +1,9 @@
 #include "DatabaseProject.h"
 #include <iostream>
 #include <ctime>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
 
 using namespace std;
 
@@ -18,6 +21,7 @@ int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
 	int nblocks = 500;	// number of blocks in the file
+	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
 	record_t record2;
@@ -29,10 +33,19 @@ int main(int argc, char** argv) {
 	FILE *infile, *outfile, *outfile2;
 	//----------------------GENERATION OF INITIAL FILES--------------------------
 	cout<<"Creating input files..."<<endl;
+
+	/* Sofia, whenever you're having problems for Windows and Linux, test for 
+	 * Windows using these macros! */
+
+#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
 	outfile = fopen("file.bin", "wb");
 	outfile2 = fopen("file2.bin", "wb");
+#else
+	outfile = fopen("file.bin", "b");
+	outfile2 = fopen("file2.bin", "b");
+#endif
 
-    char* s = new char[10];
+	char* s = new char[10];
 
 	for (int b=0; b<nblocks; ++b) { // for each block
 		block1.blockid = b;
@@ -143,6 +156,16 @@ int main(int argc, char** argv) {
 	}
 
 	fclose(infile);*/
+
+	/* 
+	 * If you want to remove the segments, you can do this: 
+	 * */
+#if defined(_WIN32) || defined(WIN32)
+	system("del /Q segment*.bin");
+#else
+	system("rm segment*.bin");
+#endif
+
 
 	return 0;
 }
