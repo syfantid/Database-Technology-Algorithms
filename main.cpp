@@ -20,7 +20,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 60000;	// number of blocks in the file
+	int nblocks = 6000;	// number of blocks in the file
 	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
@@ -30,17 +30,11 @@ int main(int argc, char** argv) {
 	block_t block2;
 
 	unsigned int recid = 0;
-	FILE *infile, *outfile, *outfile2;
+	FILE *outfile, *outfile2;
 	//----------------------GENERATION OF INITIAL FILES--------------------------
 	cout<<"Creating input files..."<<endl;
-
-    #if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
-        outfile = fopen("file.bin", "wb");
-        outfile2 = fopen("file2.bin", "wb");
-    #else
-        outfile = fopen("file.bin", "w");
-        outfile2 = fopen("file2.bin", "w");
-    #endif
+    outfile = fopen("file.bin", FILE_WRITE);
+    outfile2 = fopen("file2.bin", FILE_READ);
 
 	char* s = new char[10];
 
@@ -50,27 +44,20 @@ int main(int argc, char** argv) {
 		for (int r=0; r<MAX_RECORDS_PER_BLOCK; ++r) { // for each record
 			// prepare a record for file 1
 			record1.recid = recid;
-			//cout<<"Record ID 1: "<<record1.recid<<endl;
-			record1.num = rand() % (nblocks*20);
+			record1.num = rand() % (nblocks*30);
             gen_random_string(s,5);
 			strcpy(record1.str,s);//Put a random string to each record
 
 			// prepare a record for file 2
 			record2.recid = recid++;
-			//cout<<"Record ID 2: "<<record2.recid<<endl;
-			record2.num = rand() % (nblocks*20);
+			record2.num = rand() % (nblocks*30);
             gen_random_string(s,5);
 			strcpy(record2.str,s);//Put a random string to each record
-
+            //We use these extra condition for checking the string join
 			if (r==1)
             {
                 strcpy(record1.str,"Hola");
                 strcpy(record2.str,"Hola");
-            }
-            if (r==2)
-            {
-                strcpy(record1.str,"Aloha");
-                strcpy(record2.str,"Aloha");
             }
 			record1.valid = true;
 			record2.valid = true;
@@ -91,9 +78,10 @@ int main(int argc, char** argv) {
 	fclose(outfile);
 	fclose(outfile2);
 
-	//-----------------------------MERGE SORT-----------------------------------
-	block_t *buffer = NULL;
+    block_t *buffer = NULL;
     unsigned int nios;
+
+	//-----------------------------MERGE SORT-----------------------------------
     /*cout<<endl<<"--------------------MERGE SORT-------------------"<<endl<<endl;
 	char filename[] = "file.bin";
 	char *outputfile = new char[30]; //Big enough for a file name
@@ -117,64 +105,31 @@ int main(int argc, char** argv) {
     cout<<"NUMBER OF IOs (including the merge sort IOs): "<<nios<<endl;
     cout<<"OUTFILE: "<<outputfileunique<<endl;*/
 
-
-
-    //------------------------MERGE JOIN---------------------------//
+    //------------------------MERGE JOIN---------------------------
     cout<<endl<<"--------------MERGE JOIN-------------------"<<endl<<endl;
-    char *mergeoutfile= new char[30];
     unsigned int nres;
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'1',buffer,92,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'1',buffer,100,outmerge,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 
-    //------------------------HASH JOIN---------------------------//
+    //------------------------HASH JOIN---------------------------
     cout<<endl<<"--------------HASH JOIN-------------------"<<endl<<endl;
     char outhash[]="outhash.bin";
-    HashJoin("1outfile.bin","2outfile.bin",'1',buffer,92,outhash,&nres,&nios);
+    HashJoin("1outfile.bin","2outfile.bin",'1',buffer,100,outhash,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs: "<<nios<<endl;
-	// open file and print contents
-	/*infile = fopen("file.bin", "r");
-	int nreserved;
-	while (!feof(infile)) { // while end-of-file has not been reached ...
-
-		fread(&block, 1, sizeof(block_t), infile); // read the next block
-		nreserved = block.nreserved;
-
-		// print block contents
-		for (int i=0; i<nreserved; ++i) {
-			printf("this is block id: %d, record id: %d, num: %d, str: %s\n",
-					block.blockid, block.entries[i].recid, block.entries[i].num, block.entries[i].str);
-		}
-	}
-
-	fclose(infile);
-	infile = fopen("file2.bin", "r");
-	while (!feof(infile)) { // while end-of-file has not been reached ...
-
-		fread(&block, 1, sizeof(block_t), infile); // read the next block
-		nreserved = block.nreserved;
-
-		// print block contents
-		for (int i=0; i<nreserved; ++i) {
-			printf("this is block id: %d, record id: %d, num: %d, str: %s\n",
-					block.blockid, block.entries[i].recid, block.entries[i].num, block.entries[i].str);
-		}
-	}
-
-	fclose(infile);*/
 
 	/*
 	 * If you want to remove the segments, you can do this:
 	 * */
-#if defined(_WIN32) || defined(WIN32)
-	system("del /Q segment*.bin");
-#else
-	system("rm segment*.bin");
-#endif
+    #if defined(_WIN32) || defined(WIN32)
+        system("del /Q segment*.bin");
+    #else
+        system("rm segment*.bin");
+    #endif
 
 
 	return 0;

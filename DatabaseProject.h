@@ -16,11 +16,16 @@
 	#define FILE_WRITE "w"
 #endif
 
+/*The project was tested both in Linux and Windows laptops.
+However, our only desktop runs on Windows, so, the testing
+of Merge Join with 2 files of 10GB each was done on a Windows
+machine.*/
+
 std::string createFileName(unsigned fileNumber);
 
 void printRecord(record_t r);
 
-bool read(int number, unsigned b,std::vector<std::string>& names,std::vector<FILE*>&
+/*bool read(int number, unsigned b,std::vector<std::string>& names,std::vector<FILE*>&
           currentFiles,block_t *buffer);
 bool readFileBlock(int number, unsigned b, std::vector<std::string>& names,
                    std::vector<FILE*>& files,block_t *buffer);
@@ -28,6 +33,6 @@ bool readFileBlock(int number, unsigned b, std::vector<std::string>& names,
 bool readBlock(unsigned b,std::vector<FILE*>& currentFiles,block_t *buffer);
 
 bool readOpenFileBlock(unsigned b, std::vector<FILE*>&
-                       currentFiles,block_t *buffer,std::vector<std::string>& names);
+                       currentFiles,block_t *buffer,std::vector<std::string>& names);*/
 
 #endif // DATABASE_PROJECT_H

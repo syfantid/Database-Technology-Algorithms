@@ -14,6 +14,7 @@ using namespace std;
 
 int num_open = 0;
 
+//Comparator Struct for use in minheap constructor
 struct CompareRecord : public std::binary_function<record_t*, record_t*, bool> {
 	char field;
 	CompareRecord(char field = 0): field(field) {}
@@ -117,13 +118,13 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	unsigned outindex = 0; //The index for the output buffer
 	unsigned uniques = 0; //Number of unique records
 
-	//cout<<"Eliminating Duplicates..."<<endl;
 	while(!feof(inputfile)) { //while there are more blocks in the file
 		//Read one sorted block at a time
 		fread(&buffer[0], sizeof(block_t), 1, inputfile);
 		for(unsigned i=0; i<buffer[0].nreserved; ++i) { //for all block entries
                 total++;
 			bool same = false;
+			//Check similarity based on field
 			if(field == '0') {
                 if(compareID(&buffer[0].entries[i],&previous) == 0) {
                     same = true;
@@ -142,9 +143,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
                 }
 			}
 			if(!same) { //It's not a duplicate
-				//cout<<"-----------------------UNIQUE!"<<endl;
-				uniques += 1;
-				//printRecord(buffer[0].entries[i]);
+				uniques += 1; //Increase unique records by one
 				if(outindex == MAX_RECORDS_PER_BLOCK) {
 					//If output buffer is full, append it to file
 					fwrite(&buffer[1], sizeof(block_t), 1, outputfile);
@@ -163,9 +162,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	}
 	//Close files
 	fclose(inputfile);
-	//cout << "close: " << --num_open << endl;
 	fclose(outputfile);
-	//cout << "close: " << --num_open << endl;
 	//Free buffer memory
 	free(buffer);
 	*nunique = uniques;
@@ -181,7 +178,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 		//Open the file
 		FILE *inputfile,*outputfile;
 		inputfile = fopen(infile,FILE_READ);
-		//cout << "open: " << ++num_open << endl;
 		//Allocate memory to buffer
 		buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 		//Allocate disc space for records in buffer
@@ -192,7 +188,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 		unsigned fileNumber = 0; //The next number of file to be written on disc
 		//Creating the initial files from the input file - STEP 0
 		//While there are more records in the file to be read
-		//cout << "0." << endl;
 		while(!feof(inputfile)) {
 			//Read as many blocks as the buffer fits
 			fread(buffer, nmem_blocks, sizeof(block_t), inputfile);
@@ -208,7 +203,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 					recordsIndex++;
 				}
 			}
-
 			//Sorts the records in the buffer based on the specified field
 			if(field == '0')
 				qsort(records,recordsIndex, sizeof(record_t), compareID);
@@ -224,7 +218,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 			int recSecIndex=0;
 			string name = createFileName(fileNumber);
 			outputfile = fopen(name.c_str(), FILE_WRITE);
-			//cout << "open: " << ++num_open << endl;
 			for (unsigned b=0; b<nmem_blocks; b++) {
 				for (int i=0; i<MAX_RECORDS_PER_BLOCK && recSecIndex<recordsIndex; i++) {
 					buffer[b].entries[i]=records[recSecIndex];
@@ -234,16 +227,13 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 				ios+=1;
 			}
 			fclose(outputfile);
-			//cout << "close: " << --num_open << endl;
-
 			//Emptying buffer
 			memset(buffer, 0, nmem_blocks*sizeof(block_t));
 			recordsIndex = 0;
 		}
-		//cout << "1." << endl;
 		fclose(inputfile); //Closing the initial file
-		//cout << "close: " << --num_open << endl;
 		free(records);
+
 		//N-WAY MERGE - STEP 1...N
 		unsigned phase = 1; //Number of phases for the merging
 		int filesInPhase = fileNumber;
@@ -253,9 +243,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 		//e.g.segment6.bin
 		int initialOutputFileNumber = outputFileNumber;
 		do {
-			//cout << "2." << endl;
 			//While we have more than 1 file for the next round to merge -
-			//cout<<"PHASE "<<phase<<endl;
 			filesProducedInPhase = 0;
 			//The current n-1 files of a block
 			vector<FILE*> currentFiles(nmem_blocks-1);
@@ -269,49 +257,34 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 			vector<unsigned> index(nmem_blocks,0);
 
 			while(filesRead < filesInPhase) {
-				//cout << "3." << endl;
 				int filesInRound = 0;
-				/*cout<<"Files read in phase so far: "<<filesRead<<endl<<
-				"Total files in phase: "<<filesInPhase<<endl;*/
 				//While there are more current
 				//files to be read in this round - WHILE FOR FILES IN ROUND
 				string outputName = createFileName(outputFileNumber);
 				//cout << "3.x going to open" << endl;
 				outputfile = fopen(outputName.c_str(), FILE_WRITE);
-				//cout << "open: " << ++num_open << endl;
                 int openFiles = 0;
 				for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read
 
 					//their first block into n-1 buffer blocks
 					if(inputFileNumber<initialOutputFileNumber) {
 						names[b] = createFileName(inputFileNumber);
-						//cout << "3. going to open" << endl;
                         currentFiles[b] = fopen(names[b].c_str(),FILE_READ);
                         ++openFiles;
-						//cout << "open: " << ++num_open << endl;
-						//cout << "going to fread" << endl;
 						fread(&buffer[b],sizeof(block_t),1,currentFiles[b]);
-						//cout << "fread" << endl;
 
-
-						//cout << "going to test feof" << endl;
 						if(!feof(currentFiles[b])) {
-							//cout << "!feof" << endl;
 							++filesRead; //Each buffer block "reads" a different file
 							++inputFileNumber; //Update the file number to be read next
-							//cout << "buffer[b].entries[index[b]].dummy1 = b;" << endl;
 							buffer[b].entries[index[b]].dummy1 = b;
 							//Put a record inside the minheap
-							//cout << "pq. push" << endl;
 							pq.push(&buffer[b].entries[index[b]]);
 							--buffer[b].dummy;
-							//cout << " endif" << endl;
 							++filesInRound;
 						}
-						//cout << "endif2" << endl;
 					}
 				}
-				//cout << "3.1" << endl;
+
 				bool flag = true;
 				//While there is still at least one buffer block with records
 				while(flag) {
@@ -332,7 +305,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 					++buffer[nmem_blocks-1].nreserved;
 					++index[nmem_blocks-1];
 					int b = ((record_t*)pq.top())->dummy1;
-					//printRecord(*(record_t*)pq.top());
 					pq.pop();
 					++index[b];
 					if(index[b] == buffer[b].nreserved) { //If the buffer block has
@@ -341,6 +313,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 							index[b] = 0;
 						} //else the file has finished
 					}
+					//Dummy and flag are used to check whether buffers still have elements
 					for(int b=0; b<filesInRound; ++b) {
 						if(buffer[b].dummy != 0) {
 							flag = true;
@@ -352,8 +325,9 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 						--buffer[b].dummy;
 					}
 				}
-				//cout << "4." << endl;
+
 				while(!pq.empty()) { //While there are more elements in the minheap
+					//If buffer is full write it to file
 					if(index[nmem_blocks-1] >= buffer[nmem_blocks-1].nreserved) {
 						buffer[nmem_blocks-1].dummy = buffer[nmem_blocks-1].nreserved;
 						fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,outputfile);
@@ -362,13 +336,11 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 						index[nmem_blocks-1] = 0;
 					}
 					memcpy(&buffer[nmem_blocks-1].entries[index[nmem_blocks-1]],
-					       pq.top(),sizeof(record_t));
+					       pq.top(),sizeof(record_t)); //Copy the top of the heap to the buffer
 					++index[nmem_blocks-1];
 					++buffer[nmem_blocks-1].nreserved;
-					//printRecord(*(record_t*)pq.top());
-					pq.pop();
+					pq.pop(); //Discard the top of the heap
 				}
-				//cout << "5." << endl;
 				buffer[nmem_blocks-1].dummy = buffer[nmem_blocks-1].nreserved;
 				fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,outputfile);
 				ios+=1;
@@ -377,37 +349,31 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 				++outputFileNumber;
 				++filesProducedInPhase;
 				fclose(outputfile);
-				//cout << "close: " << --num_open << endl;
+
+                //for (auto f : currentFiles) fclose(f);fc
 				for(int i=0; i<openFiles; ++i) { //Closing current files
-					fclose(currentFiles[i]); //disabled for Linux
-					//cout << "close: " << --num_open << endl;
+					fclose(currentFiles[i]);
 					remove(names[i].c_str()); //Deleting current files, so that
 					//the disc isn't full of not needed files
 				}
-				//cout << "6." << endl;
 				memset(buffer,0,nmem_blocks*sizeof(block_t));
 				for(unsigned b=0; b<nmem_blocks; ++b) {
 					index[b] = 0; //Each block's index returns to 0
 				}
 			}
-			//cout << "7." << endl;
-			phase+=1;
+			phase+=1; //Go to next phase
 			fileNumber += filesProducedInPhase;
 			outputFileNumber = inputFileNumber+filesProducedInPhase;
 			initialOutputFileNumber = outputFileNumber;
 			filesInPhase = filesProducedInPhase;
-
-			//for (auto f : currentFiles) fclose(f);fc
-
 		} while(filesProducedInPhase!=1);
-		//cout << "4.";
+
 		free(buffer);
 		*npasses = phase;
 		*nsorted_segs = fileNumber;
 		*nios = ios;
 		string str = createFileName(fileNumber);
 		strcpy(outfile, str.c_str());
-		//free(records);
 	} else {
 		cout<<"The buffer size is too small!"<<endl;
 		exit(0);
@@ -424,43 +390,32 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 	unsigned int niosD_R;
 	unsigned int niosD_S;
 	int numberofIOS=0;
-	//MergeSort(infile1,field,buffer,nmem_blocks,mergeOutFile_R,&nsorted_segs_R,&npasses_R,&nios_R);
-	//MergeSort(infile2,field,buffer,nmem_blocks,mergeOutFile_S,&nsorted_segs_S,&npasses_S,&nios_S);
 	EliminateDuplicates(infile1,field,buffer,nmem_blocks,outfile_R,&nunique_R,&niosD_R);
 	EliminateDuplicates(infile2,field,buffer,nmem_blocks,outfile_S,&nunique_S,&niosD_S);
-	numberofIOS=numberofIOS+niosD_R+niosD_S;
+	numberofIOS=numberofIOS+niosD_R+niosD_S; //Total number of I/Os so far (including merge sort and eliminate duplicates)
+
 	FILE *inputFile_R, *inputFile_S,*outputFile;
+    inputFile_R= fopen(outfile_R,FILE_READ); //Fist file to be joined
+    inputFile_S= fopen(outfile_S,FILE_READ); //Second file to be joined
+    outputFile=fopen(outfile,FILE_WRITE); //Output file
 
-    inputFile_R= fopen(outfile_R,FILE_READ);
-
-	//cout << "open: " << ++num_open << endl;
-	//cout<<outfile_R<<endl;
-    inputFile_S= fopen(outfile_S,FILE_READ);
-
-	//cout << "open: " << ++num_open << endl;
-    outputFile=fopen(outfile,FILE_WRITE);
-
-	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	fread(&buffer[0],sizeof(block_t),1,inputFile_R);
 	fread(&buffer[1],sizeof(block_t),1,inputFile_S);
 	numberofIOS= numberofIOS+2;
-	unsigned int indexR=0;
-	unsigned int indexS=0;
+	unsigned int indexR=0; //Where we are at the input buffer for first file
+	unsigned int indexS=0; //Where we are at the input buffer for second file
 	unsigned int bufOutIndex=2;//the first 2 buffers are for the input files and all the rest for output
-	int bufOutEntrIndex=0;
-	int result=0;
+	int bufOutEntrIndex=0; //Where we are at the output buffer
+	int result=0; //Checks similarity between two records
 	unsigned int blockID=0;
 	int counter=0;
-	//int sofias = 0;
-	while(!feof(inputFile_R)) { //end of input files
-        //cout<<"1."<<endl;
-		if(bufOutIndex<nmem_blocks) { //end of out buffers
-            //cout<<"2."<<endl;
-			if(indexR<=buffer[0].nreserved-1) { //index of first file smaller than entries
-                //cout<<"3."<<endl;
-				if (indexS<=buffer[1].nreserved-1) { //index of second file
 
+	while(!feof(inputFile_R)) { //end of input files
+		if(bufOutIndex<nmem_blocks) { //end of out buffers
+			if(indexR<=buffer[0].nreserved-1) { //index of first file smaller than entries
+				if (indexS<=buffer[1].nreserved-1) { //index of second file
+                    //Check similarity based on field
 					if(field=='0') { //join with ID
 						result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					} else if(field=='1') { //join with num
@@ -471,17 +426,13 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 						result= compareNUMSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					}
 					if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK) { //if out buffer is full
-                        //cout<<"5."<<endl;
 						if(bufOutIndex<nmem_blocks-1) { //if there is available outbuffer index
-						    //cout<<"6."<<endl;
-							//cout<<"1"<<endl;
-							bufOutIndex++;
+							bufOutIndex++; //Go to next buffer block
 							bufOutEntrIndex=0;
-
-						} else { //if not
-						    //cout<<"6.1."<<endl;
+						} else { //if not, write buffer to file
 							for(unsigned int k=2; k<nmem_blocks; k++) { //write the buffers to file
-								//cout<<"2"<<endl;
+                                //Preparing block to be written
+                                //(alternative:blocks could be written all together instead of one by one)
 								buffer[k].blockid=blockID;
 								blockID++;
 								buffer[k].valid=true;
@@ -490,49 +441,39 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 								numberofIOS++;//each writing
 								memset(&buffer[k],0,sizeof(block_t));//flush the buffer
 							}
-							bufOutIndex=2;
+							bufOutIndex=2; //Begin again from the first available buffer block for output
 							bufOutEntrIndex=0;
 
 						}
 					} else {
-					    //cout<<"5.1."<<endl;
 						if (result==-1) { //R file's record is smaller than S file's record (sorted with mergesort);
 							indexR++;//next record of R file
-							//cout<<"-1"<<endl;
 						} else if(result==1) { //S file's record is smaller than R file's record
-							//cout<<"1"<<endl;
 							indexS++;//next record of S file
 						} else {
 							memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
-							//printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
-							//cout<<"l"<<endl;
 							buffer[bufOutIndex].nreserved++;
-							indexR++;
+							indexR++; //next record for both files
 							indexS++;
 							bufOutEntrIndex++;
 							counter++;
-
-
 						}
 					}
-				} else {
-				    //cout<<"4.1."<<endl;
+				} else { //Get the next block from file S
 					memset(&buffer[1],0,sizeof(block_t));
 					fread(&buffer[1],sizeof(block_t),1,inputFile_S);
 					numberofIOS++; //reading
-					//cout<<"RESERVED: "<<buffer[1].nreserved<<" vs "<<(sizeof(buffer[1].entries)/sizeof(*buffer[1].entries))<<endl;
-					if (buffer[1].nreserved==0) {
+					if (buffer[1].nreserved==0) { //File ended
 						break;
 					}
 					indexS=0;
 				}
-			} else {
+			} else { //Get the next block from file R
 			    //cout<<"3.1."<<endl;
 				memset(&buffer[0],0,sizeof(block_t));
 				fread(&buffer[0],sizeof(block_t),1,inputFile_R);
 				numberofIOS++; //reading
-				//cout<<"RESERVED: "<<buffer[0].nreserved<<" vs "<<(sizeof(buffer[0].entries)/sizeof(*buffer[0].entries))<<endl;
-				if (buffer[0].nreserved==0) {
+				if (buffer[0].nreserved==0) { //File ended
 					break;
 				}
 				indexR=0;
@@ -553,11 +494,8 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 	}
 	free(buffer);
 	fclose(inputFile_R);
-	//cout << "close: " << --num_open << endl;
 	fclose(inputFile_S);
-	//cout << "close: " << --num_open << endl;
 	fclose(outputFile);
-	//cout << "close: " << --num_open << endl;
 	*nres=counter;
 	*nios=numberofIOS;
 
@@ -568,7 +506,6 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	FILE *in1, *in2, *out;
     in1= fopen(infile1,FILE_READ);
 
-	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	unordered_map<unsigned int,int> m1;
 	unordered_map<string,int> m2;//string cause its easier to handle- int dummy
@@ -591,56 +528,19 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 			int nreserved = buffer[b].nreserved;
 			//For each record in the block
 			for (int i=0; i<nreserved; ++i) {
-				if(field == '0')
+				if(field == '0') {
 					m1.insert(make_pair(buffer[b].entries[i].recid,0));//insert the id
-				else if(field == '1')
+				}
+				else if(field == '1') {
 					m1.insert(make_pair(buffer[b].entries[i].num,0));//insert the num
-				else if(field == '2')
-				{
+				}
+				else if(field == '2') {
                     string str(buffer[b].entries[i].str);//we create a string of the str var and insert it to hashmap
 					m2.insert(make_pair(str,0));
                 }
 				else if(field == '3') {
                     string str(buffer[b].entries[i].str);
                     m3.insert(make_pair(buffer[b].entries[i].num,str));
-					//unordered_map<unsigned int, vector<string>>::const_iterator rec=m3.find(buffer[b].entries[i].num);
-					//if(rec != m3.end()) { //found
-						/* I added a const_cast because you can't modify
-						* a const_iterator. Hack :P, but it doesn't compile
-						* otherwise. */
-						//vector<string>& v = const_cast<vector<string>&>(rec->second);
-
-						/*
-						 * Possible bug?
-						 * std::find uses operator== to search for elements that
-						 * compare the same. However, if you compare two char
-						 * pointers (char*) with ==, it won't say whether the
-						 * strings are the same, it will rather say whether the
-						 * POINTERS are the same (most likely not). My
-						 * suggestion is to use std::string, or if you want to
-						 * keep using char*, std::find_if with a lambda.
-						 * */
-
-						/* Also here you were using just
-						 * &buffer[b].entries[i].str, so you were comparing a
-						 * char* with a char**, which g++ might allow you to do
-						 * but it's not right :) fixed it.*/
-						/*if (find(v.begin(), v.end(), &buffer[b].entries[i].str[0])==v.end()) {
-							v.push_back(&buffer[b].entries[i].str[0]);
-						}*/
-						/*string hString(buffer[b].entries[i].str);
-						if (find(v.begin(),v.end(),hString)==v.end())
-						{
-                            v.push_back(hString);
-						}
-
-					}
-					else{//not found
-                        //cout<<"he"<<endl;
-                        string hString(buffer[b].entries[i].str);//string to handle vector better
-                        insVect.push_back(hString);//insert string to vector
-                        m3.insert(make_pair(buffer[b].entries[i].num,insVect));
-					}*/
 				}
 			}
 		}
@@ -649,17 +549,16 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 
 	//Here starts the probing phase
 
-    in2=fopen(infile2,FILE_READ);
+    in2=fopen(infile2,FILE_READ); //in2 is the file used for probing
 
-    out=fopen(outfile,FILE_WRITE);
+    out=fopen(outfile,FILE_WRITE); //the output file
 
 	int outBufferIndex=0;
 	int blockID=0;
     memset(buffer, 0, nmem_blocks*sizeof(block_t));
-
 	int counter=0;
-	block_t * buffer2 = (block_t *) malloc (sizeof(block_t)*nmem_blocks);//second buffer because hashmap saves the pointer and not the value
-	while(!feof(in2))
+
+	while(!feof(in2)) //while there are more blocks in probing file
 	{
         memset(buffer, 0, (nmem_blocks-1)*sizeof(block_t));
         fread(buffer, sizeof(block_t), nmem_blocks-1,in2);//reading nmem_blocks-1 buffers, we leave one for the output
@@ -669,11 +568,10 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 		}
 		for (unsigned b=0; b<nmem_blocks-1; b++) {
 			int nreserved = buffer[b].nreserved;
-			//cout<<"nreserved:"<<nreserved<<endl;
 			for (int i=0; i<nreserved; ++i) {
                 if (outBufferIndex == MAX_RECORDS_PER_BLOCK)//if out buffer is full
-                {
-                    buffer[nmem_blocks-1].blockid=blockID;//insert the block details
+                {   //insert the block details
+                    buffer[nmem_blocks-1].blockid=blockID;
                     blockID++;
                     buffer[nmem_blocks-1].valid=true;
                     buffer[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
@@ -682,6 +580,7 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
                     outBufferIndex=0;
                 }
+                //Probe the HT with record from file 2 to check if it exists in HT
                 if(field == '0')//recID
                 {
                     unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].recid);//iterator to find the value
@@ -731,7 +630,7 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
             }
         }
 	}
-	if(counter!=0)
+	if(counter!=0) //If there are records with the same field found
 	{
         buffer[nmem_blocks-1].blockid=blockID;//insert the block details
         buffer[nmem_blocks-1].valid=true;
@@ -741,17 +640,11 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
     }
     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
     free(buffer);
-    //free(buffer);
     fclose(in2);
     fclose(out);
     *nres=counter;
     *nios=numberofIOS;
 }
-
-
-
-
-
 
 void printRecord(record_t r) {
 	printf("This is record id: %-5d, num: %-5d, str: %s\n",r.recid,r.num,r.str);
