@@ -562,12 +562,12 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	unordered_map<string,int> m2;//string cause its easier to handle- int dummy
 	unordered_multimap<unsigned int,string> m3;//in case of field 1 or 2 , vector is dummy
 	vector<string> insVect;//vector to insert to the map
-
+    int numberofIOS=0;
 	while(!feof(in1)) {
         memset(buffer, 0, nmem_blocks*sizeof(block_t));
 		//Read as many blocks as the buffer fits
 		fread(buffer, sizeof(block_t), nmem_blocks-1, in1);
-
+        numberofIOS++;
 		if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
 			break;
 		}
@@ -635,13 +635,13 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	out=fopen(outfile,"w");
 	int outBufferIndex=0;
 	int blockID=0;
-	int numberofIOS=0;
+
 	int counter=0;
 	block_t * buffer2 = (block_t *) malloc (sizeof(block_t)*nmem_blocks);//second buffer because hashmap saves the pointer and not the value
 	while(!feof(in2))//probe phase
 	{
         fread(buffer2, sizeof(block_t), nmem_blocks-1,in2);//reading nmem_blocks-1 buffers, we leave one for the output
-
+        numberofIOS++;
 		if(buffer2[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
 			break;
 		}
@@ -702,8 +702,6 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
                             memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
                             outBufferIndex++;
                             counter++;
-                            cout<<"search:"<<hString<<endl;
-                            cout<<"found:"<<it->second<<endl;
                         }
 
                     }
@@ -714,7 +712,14 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
             }
         }
 	}
+	buffer2[nmem_blocks-1].blockid=blockID;//insert the block details
+    buffer2[nmem_blocks-1].valid=true;
+    buffer2[nmem_blocks-1].nreserved= counter;
+    fwrite(&buffer2[nmem_blocks-1],sizeof(block_t),1,out);//write
+    numberofIOS++;//each writing
+    memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
     free(buffer);
+    free(buffer2);
     fclose(in2);
     fclose(out);
     *nres=counter;
