@@ -14,7 +14,7 @@
 #define _DBTPROJ_H
 
 #define STR_LENGTH 120
-#define MAX_RECORDS_PER_BLOCK 5
+#define MAX_RECORDS_PER_BLOCK 10
 
 // This is the definition of a record. Contains three fields, recid, num and str
 typedef struct {

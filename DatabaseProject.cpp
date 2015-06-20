@@ -120,13 +120,9 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	//cout<<"Eliminating Duplicates..."<<endl;
 	while(!feof(inputfile)) { //while there are more blocks in the file
 		//Read one sorted block at a time
-		if(fread(&buffer[0], sizeof(block_t), 1, inputfile)!=1) {
-            break;
-		}
-		//cout<<"New block"<<endl;
+		fread(&buffer[0], sizeof(block_t), 1, inputfile);
 		for(unsigned i=0; i<buffer[0].nreserved; ++i) { //for all block entries
                 total++;
-            //cout<<"Record id: "<<buffer[0].entries[i].recid<<endl;
 			bool same = false;
 			if(field == '0') {
                 if(compareID(&buffer[0].entries[i],&previous) == 0) {
@@ -457,18 +453,20 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 	unsigned int blockID=0;
 	int counter=0;
 	while(!feof(inputFile_R)) { //end of input files
-
+        //cout<<"1."<<endl;
 		if(bufOutIndex<nmem_blocks) { //end of out buffers
-
+            //cout<<"2."<<endl;
 			if(indexR<=buffer[0].nreserved-1) { //index of first file smaller than entries
+                //cout<<"3."<<endl;
 				if (indexS<=buffer[1].nreserved-1) { //index of second file
+				    //cout<<"4."<<endl;
+				    printRecord(buffer[0].entries[indexR]);
+				    printRecord(buffer[1].entries[indexS]);
+				    cout<<endl;
 					if(field=='0') { //join with ID
-
 						result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
-
 					} else if(field=='1') { //join with num
 						result= compareNUM(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
-
 					} else if(field=='2') { //join with STR
 						result= compareSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					} else if(field=='3') { //join with num and STR
@@ -477,13 +475,15 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 
 					//cout<<result<<endl;
 					if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK) { //if out buffer is full
-						//cout<<"5"<<endl;
+                        //cout<<"5."<<endl;
 						if(bufOutIndex<nmem_blocks-1) { //if there is available outbuffer index
+						    //cout<<"6."<<endl;
 							//cout<<"1"<<endl;
 							bufOutIndex++;
 							bufOutEntrIndex=0;
 
 						} else { //if not
+						    //cout<<"6.1."<<endl;
 							for(unsigned int k=2; k<nmem_blocks; k++) { //write the buffers to file
 								//cout<<"2"<<endl;
 								buffer[k].blockid=blockID;
@@ -499,6 +499,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 
 						}
 					} else {
+					    //cout<<"5.1."<<endl;
 						if (result==-1) { //R file's record is smaller than S file's record (sorted with mergesort);
 							indexR++;//next record of R file
 							//cout<<"-1"<<endl;
@@ -506,7 +507,6 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 							//cout<<"1"<<endl;
 							indexS++;//next record of S file
 						} else {
-
 							memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
 							//printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
 							//cout<<"l"<<endl;
@@ -519,18 +519,22 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 						}
 					}
 				} else {
+				    //cout<<"4.1."<<endl;
 					memset(&buffer[1],0,sizeof(block_t));
 					fread(&buffer[1],sizeof(block_t),1,inputFile_S);
 					numberofIOS++; //reading
+					//cout<<"RESERVED: "<<buffer[1].nreserved<<" vs "<<(sizeof(buffer[1].entries)/sizeof(*buffer[1].entries))<<endl;
 					if (buffer[1].nreserved==0) {
 						break;
 					}
 					indexS=0;
 				}
 			} else {
+			    //cout<<"3.1."<<endl;
 				memset(&buffer[0],0,sizeof(block_t));
 				fread(&buffer[0],sizeof(block_t),1,inputFile_R);
 				numberofIOS++; //reading
+				//cout<<"RESERVED: "<<buffer[0].nreserved<<" vs "<<(sizeof(buffer[0].entries)/sizeof(*buffer[0].entries))<<endl;
 				if (buffer[0].nreserved==0) {
 					break;
 				}

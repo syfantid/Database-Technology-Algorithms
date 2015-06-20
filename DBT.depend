@@ -67,7 +67,7 @@
 
 1434643208 c:\users\sofia yfantidou\documents\dbt\hashtable.h
 
-1434829851 source:c:\users\sofia yfantidou\documents\dbt\main.cpp
+1434835754 source:c:\users\sofia yfantidou\documents\dbt\main.cpp
 	"DatabaseProject.h"
 	<iostream>
 	<ctime>
@@ -75,7 +75,7 @@
 	<cstring>
 	<cstdio>
 
-1434830561 c:\users\sofia yfantidou\documents\dbt\databaseproject.h
+1434833810 c:\users\sofia yfantidou\documents\dbt\databaseproject.h
 	<cstdlib>
 	<cstdio>
 	<cstring>
@@ -83,9 +83,9 @@
 	<vector>
 	"dbtproj.h"
 
-1434826968 c:\users\sofia yfantidou\documents\dbt\dbtproj.h
+1434835500 c:\users\sofia yfantidou\documents\dbt\dbtproj.h
 
-1434830561 source:c:\users\sofia yfantidou\documents\dbt\databaseproject.cpp
+1434835702 source:c:\users\sofia yfantidou\documents\dbt\databaseproject.cpp
 	"DatabaseProject.h"
 	<iostream>
 	<sstream>
@@ -96,5 +96,4 @@
 	<ciso646>
 	<algorithm>
 	<stdio.h>
-	<cassert>
 

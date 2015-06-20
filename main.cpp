@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             gen_random_string(s,5);
 			strcpy(record2.str,s);//Put a random string to each record
 
-			if (r==50)
+			if (r==1 || r==2)
             {
                 strcpy(record1.str,"Hola");
                 strcpy(record2.str,"Hola");
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'0',buffer,400,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'0',buffer,200,outmerge,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 
