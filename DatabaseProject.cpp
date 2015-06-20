@@ -560,7 +560,8 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	unordered_map<unsigned int,int> m1;
 	unordered_map<string,int> m2;//string cause its easier to handle- int dummy
-	unordered_map<unsigned int,vector<char *>> m3;//in case of field 1 or 2 , vector is dummy
+	unordered_multimap<unsigned int,string> m3;//in case of field 1 or 2 , vector is dummy
+	vector<string> insVect;//vector to insert to the map
 
 	while(!feof(in1)) {
         memset(buffer, 0, nmem_blocks*sizeof(block_t));
@@ -585,12 +586,14 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 					m2.insert(make_pair(str,0));
                 }
 				else if(field == '3') {
-					unordered_map<unsigned int, vector<char *>>::const_iterator rec=m3.find(buffer[b].entries[i].num);
-					if(rec != m3.end()) { //found
+                    string str(buffer[b].entries[i].str);
+                    m3.insert(make_pair(buffer[b].entries[i].num,str));
+					//unordered_map<unsigned int, vector<string>>::const_iterator rec=m3.find(buffer[b].entries[i].num);
+					//if(rec != m3.end()) { //found
 						/* I added a const_cast because you can't modify
 						* a const_iterator. Hack :P, but it doesn't compile
 						* otherwise. */
-						vector<char*>& v = const_cast<vector<char*>&>(rec->second);
+						//vector<string>& v = const_cast<vector<string>&>(rec->second);
 
 						/*
 						 * Possible bug?
@@ -607,16 +610,22 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 						 * &buffer[b].entries[i].str, so you were comparing a
 						 * char* with a char**, which g++ might allow you to do
 						 * but it's not right :) fixed it.*/
-						if (find(v.begin(), v.end(), &buffer[b].entries[i].str[0])==v.end()) {
+						/*if (find(v.begin(), v.end(), &buffer[b].entries[i].str[0])==v.end()) {
 							v.push_back(&buffer[b].entries[i].str[0]);
+						}*/
+						/*string hString(buffer[b].entries[i].str);
+						if (find(v.begin(),v.end(),hString)==v.end())
+						{
+                            v.push_back(hString);
 						}
 
 					}
 					else{//not found
-                        vector<char *> insVect;//vector to insert to the map
-                        insVect.push_back(&buffer[b].entries[i].str[0]);//
+                        //cout<<"he"<<endl;
+                        string hString(buffer[b].entries[i].str);//string to handle vector better
+                        insVect.push_back(hString);//insert string to vector
                         m3.insert(make_pair(buffer[b].entries[i].num,insVect));
-					}
+					}*/
 				}
 			}
 		}
@@ -684,7 +693,24 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
                 }
                 else if(field == '3')//num and str
                  {
+                    string hString(buffer2[b].entries[i].str);
+                    auto range= m3.equal_range(buffer2[b].entries[i].num);
+                    for (auto it = range.first;it !=range.second;++it)
+                    {
+                           if(it->second== hString)
+                           {
+                            memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
+                            outBufferIndex++;
+                            counter++;
+                            cout<<"search:"<<hString<<endl;
+                            cout<<"found:"<<it->second<<endl;
+                        }
+
                     }
+
+
+
+                }
             }
         }
 	}
