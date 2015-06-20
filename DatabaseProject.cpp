@@ -460,9 +460,6 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
                 //cout<<"3."<<endl;
 				if (indexS<=buffer[1].nreserved-1) { //index of second file
 				    //cout<<"4."<<endl;
-				    printRecord(buffer[0].entries[indexR]);
-				    printRecord(buffer[1].entries[indexS]);
-				    cout<<endl;
 					if(field=='0') { //join with ID
 						result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					} else if(field=='1') { //join with num
@@ -510,6 +507,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 							memcpy(&buffer[bufOutIndex].entries[bufOutEntrIndex],&buffer[0].entries[indexR],sizeof(record_t));//join random (here with the R record)
 							//printRecord(buffer[bufOutIndex].entries[bufOutEntrIndex]);
 							//cout<<"l"<<endl;
+							buffer[bufOutIndex].nreserved++;
 							indexR++;
 							indexS++;
 							bufOutEntrIndex++;
@@ -542,7 +540,8 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 			}
 		}
 	}
-	for(unsigned int k=2; k<nmem_blocks; k++) { //write the remaining buffers to file
+
+	for(unsigned int k=2; k<=bufOutIndex; k++) { //write the remaining buffers to file
 		if(buffer[k].nreserved!=0) {
 			buffer[k].blockid=blockID;
 			blockID++;
@@ -657,71 +656,74 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 
 	int outBufferIndex=0;
 	int blockID=0;
+    memset(buffer, 0, nmem_blocks*sizeof(block_t));
 
 	int counter=0;
 	block_t * buffer2 = (block_t *) malloc (sizeof(block_t)*nmem_blocks);//second buffer because hashmap saves the pointer and not the value
 	while(!feof(in2))
 	{
-        fread(buffer2, sizeof(block_t), nmem_blocks-1,in2);//reading nmem_blocks-1 buffers, we leave one for the output
+        memset(buffer, 0, (nmem_blocks-1)*sizeof(block_t));
+        fread(buffer, sizeof(block_t), nmem_blocks-1,in2);//reading nmem_blocks-1 buffers, we leave one for the output
         numberofIOS++;
-		if(buffer2[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
+		if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
 			break;
 		}
 		for (unsigned b=0; b<nmem_blocks-1; b++) {
-			int nreserved = buffer2[b].nreserved;
+			int nreserved = buffer[b].nreserved;
+			//cout<<"nreserved:"<<nreserved<<endl;
 			for (int i=0; i<nreserved; ++i) {
                 if (outBufferIndex == MAX_RECORDS_PER_BLOCK)//if out buffer is full
                 {
-                    buffer2[nmem_blocks-1].blockid=blockID;//insert the block details
+                    buffer[nmem_blocks-1].blockid=blockID;//insert the block details
                     blockID++;
-                    buffer2[nmem_blocks-1].valid=true;
-                    buffer2[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
-                    fwrite(&buffer2[nmem_blocks-1],sizeof(block_t),1,out);//write
+                    buffer[nmem_blocks-1].valid=true;
+                    buffer[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
+                    fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,out);//write
                     numberofIOS++;//each writing
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
                     outBufferIndex=0;
                 }
                 if(field == '0')//recID
                 {
-                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer2[b].entries[i].recid);//iterator to find the value
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].recid);//iterator to find the value
                     if (rec!=m1.end())//found
                     {
-                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the seconds file's record
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the seconds file's record
                         outBufferIndex++;
                         counter++;
                     }
                 }
                 else if(field == '1')//num
                 {
-                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer2[b].entries[i].num);//iterator to find the value
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].num);//iterator to find the value
                     if (rec!=m1.end())//found
                     {
-                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
                         outBufferIndex++;
                         counter++;
                     }
                 }
                 else if(field == '2')//str
                 {
-                    string str(buffer2[b].entries[i].str);//"converting" to string- easier handling
+                    string str(buffer[b].entries[i].str);//"converting" to string- easier handling
 
                     unordered_map<string, int>::const_iterator rec=m2.find(str);//iterator to find the value
                     if (rec!=m2.end())//found
                     {
-                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
                         outBufferIndex++;
                         counter++;
                     }
                 }
                 else if(field == '3')//num and str
                 {
-                    string hString(buffer2[b].entries[i].str);
-                    auto range= m3.equal_range(buffer2[b].entries[i].num);
+                    string hString(buffer[b].entries[i].str);
+                    auto range= m3.equal_range(buffer[b].entries[i].num);
                     for (auto it = range.first;it !=range.second;++it)
                     {
                            if(it->second== hString)
                            {
-                            memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
+                            memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
                             outBufferIndex++;
                             counter++;
                         }
@@ -730,14 +732,17 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
             }
         }
 	}
-	buffer2[nmem_blocks-1].blockid=blockID;//insert the block details
-    buffer2[nmem_blocks-1].valid=true;
-    buffer2[nmem_blocks-1].nreserved= counter;
-    fwrite(&buffer2[nmem_blocks-1],sizeof(block_t),1,out);//write
-    numberofIOS++;//each writing
+	if(counter!=0)
+	{
+        buffer[nmem_blocks-1].blockid=blockID;//insert the block details
+        buffer[nmem_blocks-1].valid=true;
+        buffer[nmem_blocks-1].nreserved= counter;
+        fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,out);//write
+        numberofIOS++;//each writing
+    }
     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
     free(buffer);
-    free(buffer2);
+    //free(buffer);
     fclose(in2);
     fclose(out);
     *nres=counter;
