@@ -20,7 +20,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 4;	// number of blocks in the file
+	int nblocks = 40000;	// number of blocks in the file
 	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
@@ -62,10 +62,15 @@ int main(int argc, char** argv) {
             gen_random_string(s,5);
 			strcpy(record2.str,s);//Put a random string to each record
 
-			if (r==1 || r==2)
+			if (r==1)
             {
                 strcpy(record1.str,"Hola");
                 strcpy(record2.str,"Hola");
+            }
+            if (r==2)
+            {
+                strcpy(record1.str,"Aloha");
+                strcpy(record2.str,"Aloha");
             }
 			record1.valid = true;
 			record2.valid = true;
@@ -121,14 +126,14 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'0',buffer,200,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'2',buffer,400,outmerge,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 
     //------------------------HASH JOIN---------------------------//
     cout<<endl<<"--------------HASH JOIN-------------------"<<endl<<endl;
     char outhash[]="outhash.bin";
-    HashJoin("1outfile.bin","2outfile.bin",'0',buffer,50,outhash,&nres,&nios);
+    HashJoin("1outfile.bin","2outfile.bin",'2',buffer,400,outhash,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs: "<<nios<<endl;
 	// open file and print contents
