@@ -447,11 +447,12 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 	numberofIOS= numberofIOS+2;
 	unsigned int indexR=0;
 	unsigned int indexS=0;
-	unsigned int bufOutIndex=2;//the first 2 buffers are for the input files
+	unsigned int bufOutIndex=2;//the first 2 buffers are for the input files and all the rest for output
 	int bufOutEntrIndex=0;
 	int result=0;
 	unsigned int blockID=0;
 	int counter=0;
+	//int sofias = 0;
 	while(!feof(inputFile_R)) { //end of input files
         //cout<<"1."<<endl;
 		if(bufOutIndex<nmem_blocks) { //end of out buffers
@@ -459,7 +460,10 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 			if(indexR<=buffer[0].nreserved-1) { //index of first file smaller than entries
                 //cout<<"3."<<endl;
 				if (indexS<=buffer[1].nreserved-1) { //index of second file
+<<<<<<< HEAD
 				    //cout<<"4."<<endl;
+=======
+>>>>>>> 5d2f33b523e631f46aa998a6d4c96b9058ff025e
 					if(field=='0') { //join with ID
 						result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					} else if(field=='1') { //join with num
@@ -469,8 +473,6 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 					} else if(field=='3') { //join with num and STR
 						result= compareNUMSTR(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					}
-
-					//cout<<result<<endl;
 					if (bufOutEntrIndex== MAX_RECORDS_PER_BLOCK) { //if out buffer is full
                         //cout<<"5."<<endl;
 						if(bufOutIndex<nmem_blocks-1) { //if there is available outbuffer index
