@@ -559,10 +559,11 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	unordered_map<unsigned int,int> m1;
-	unordered_map<char *,int> m2;//int dummy
+	unordered_map<string,int> m2;//string cause its easier to handle- int dummy
 	unordered_map<unsigned int,vector<char *>> m3;//in case of field 1 or 2 , vector is dummy
 
 	while(!feof(in1)) {
+        memset(buffer, 0, nmem_blocks*sizeof(block_t));
 		//Read as many blocks as the buffer fits
 		fread(buffer, sizeof(block_t), nmem_blocks-1, in1);
 
@@ -575,11 +576,14 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 			//For each record in the block
 			for (int i=0; i<nreserved; ++i) {
 				if(field == '0')
-					m1.insert(make_pair(buffer[b].entries[i].recid,0));
+					m1.insert(make_pair(buffer[b].entries[i].recid,0));//insert the id
 				else if(field == '1')
-					m1.insert(make_pair(buffer[b].entries[i].num,0));
+					m1.insert(make_pair(buffer[b].entries[i].num,0));//insert the num
 				else if(field == '2')
-					m2.insert(make_pair(buffer[b].entries[i].str,0));
+				{
+                    string str(buffer[b].entries[i].str);//we create a string of the str var and insert it to hashmap
+					m2.insert(make_pair(str,0));
+                }
 				else if(field == '3') {
 					unordered_map<unsigned int, vector<char *>>::const_iterator rec=m3.find(buffer[b].entries[i].num);
 					if(rec != m3.end()) { //found
@@ -624,62 +628,62 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	int blockID=0;
 	int numberofIOS=0;
 	int counter=0;
+	block_t * buffer2 = (block_t *) malloc (sizeof(block_t)*nmem_blocks);//second buffer because hashmap saves the pointer and not the value
 	while(!feof(in2))//probe phase
 	{
-        fread(buffer, sizeof(block_t), nmem_blocks-1,in2);
+        fread(buffer2, sizeof(block_t), nmem_blocks-1,in2);//reading nmem_blocks-1 buffers, we leave one for the output
 
-		if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
+		if(buffer2[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
 			break;
 		}
 		for (unsigned b=0; b<nmem_blocks-1; b++) {
-			int nreserved = buffer[b].nreserved;
+			int nreserved = buffer2[b].nreserved;
 			for (int i=0; i<nreserved; ++i) {
-                if (outBufferIndex== MAX_RECORDS_PER_BLOCK)//if out buffer is full
+                if (outBufferIndex == MAX_RECORDS_PER_BLOCK)//if out buffer is full
                 {
-                    buffer[nmem_blocks-1].blockid=blockID;//insert the block details
+                    buffer2[nmem_blocks-1].blockid=blockID;//insert the block details
                     blockID++;
-                    buffer[nmem_blocks-1].valid=true;
-                    buffer[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
-                    fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,out);//write
+                    buffer2[nmem_blocks-1].valid=true;
+                    buffer2[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
+                    fwrite(&buffer2[nmem_blocks-1],sizeof(block_t),1,out);//write
                     numberofIOS++;//each writing
                     memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
                     outBufferIndex=0;
                 }
-                if(field == '0')
+                if(field == '0')//recID
                 {
-                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].recid);
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer2[b].entries[i].recid);//iterator to find the value
                     if (rec!=m1.end())//found
                     {
-                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the seconds file's record
+                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the seconds file's record
                         outBufferIndex++;
                         counter++;
                     }
                 }
-                else if(field == '1')
+                else if(field == '1')//num
                 {
-                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].num);
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer2[b].entries[i].num);//iterator to find the value
                     if (rec!=m1.end())//found
                     {
-                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
+                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
                         outBufferIndex++;
-                        cout<<"num:"<<rec->first<<endl;
-                        //cout<<outBufferIndex<<endl;
                         counter++;
                     }
                 }
-                else if(field == '2')
+                else if(field == '2')//str
                 {
-                    unordered_map<char*, int>::const_iterator rec=m2.find(buffer[b].entries[i].str);
+                    string str(buffer2[b].entries[i].str);//"conωerting" to string- easier handling
+
+                    unordered_map<string, int>::const_iterator rec=m2.find(str);//iterator to find the value
                     if (rec!=m2.end())//found
                     {
-                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
+                        memcpy(&buffer2[nmem_blocks-1].entries[outBufferIndex],&buffer2[b].entries[i],sizeof(record_t));//join with the second file's record
                         outBufferIndex++;
-                        //cout<<"str1:"<<buffer[b].entries[i].str<<endl;
-                        //cout<<"str:"<<rec->first<<endl;
                         counter++;
                     }
                 }
-                else if(field == '3') {
+                else if(field == '3')//num and str
+                 {
                     }
             }
         }
