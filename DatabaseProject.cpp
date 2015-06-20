@@ -113,7 +113,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	//cout << "open: " << ++num_open << endl;
 	outputfile = fopen(outfile,"wb"); //Open a file for output
 	//cout << "open: " << ++num_open << endl;
-#else 
+#else
 	inputfile = fopen(outofMerge, "r"); //Open the sorted file for reading
 	//cout << "open: " << ++num_open << endl;
 	outputfile = fopen(outfile, "w"); //Open a file for output
@@ -156,7 +156,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	}
 	//Close files
 	fclose(inputfile);
-	//cout << "close: " << --num_open << endl;	
+	//cout << "close: " << --num_open << endl;
 	fclose(outputfile);
 	//cout << "close: " << --num_open << endl;
 	//Free buffer memory
@@ -252,7 +252,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 			//While we have more than 1 file for the next round to merge -
 			//cout<<"PHASE "<<phase<<endl;
 			filesProducedInPhase = 0;
-			//The current n-1 files of a block			
+			//The current n-1 files of a block
 			vector<FILE*> currentFiles(nmem_blocks-1);
 			//The names of the open currentFiles
 			vector<string> names(nmem_blocks-1);
@@ -262,7 +262,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 			priority_queue<record_t*, std::vector<record_t*>, CompareRecord> pq(cmp);
 			//Keeps the current index of each block (both input and output blocks)
 			vector<unsigned> index(nmem_blocks,0);
-			
+
 			while(filesRead < filesInPhase) {
 				//cout << "3." << endl;
 				int filesInRound = 0;
@@ -291,7 +291,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 						//cout << "going to fread" << endl;
 						fread(&buffer[b],sizeof(block_t),1,currentFiles[b]);
 						//cout << "fread" << endl;
-						
+
 
 						//cout << "going to test feof" << endl;
 						if(!feof(currentFiles[b])) {
@@ -313,7 +313,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 				//cout << "3.1" << endl;
 				bool flag = true;
 				//While there is still at least one buffer block with records
-				while(flag) {			
+				while(flag) {
 					flag = false;
 					if(buffer[nmem_blocks-1].nreserved == MAX_RECORDS_PER_BLOCK) {
 						//If output buffer is full, append it to file
@@ -376,7 +376,7 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 				fclose(outputfile);
 				//cout << "close: " << --num_open << endl;
 				for(unsigned i=0; i<nmem_blocks-1; ++i) { //Closing current files
-					fclose(currentFiles[i]);
+					//fclose(currentFiles[i]); //disabled for Linux
 					//cout << "close: " << --num_open << endl;
 					remove(names[i].c_str()); //Deleting current files, so that
 					//the disc isn't full of not needed files
@@ -541,11 +541,11 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 		}
 	}
 	free(buffer);
-	fclose(inputFile_R); 
+	fclose(inputFile_R);
 	//cout << "close: " << --num_open << endl;
-	fclose(inputFile_S); 
+	fclose(inputFile_S);
 	//cout << "close: " << --num_open << endl;
-	fclose(outputFile); 
+	fclose(outputFile);
 	//cout << "close: " << --num_open << endl;
 	*nres=counter;
 	*nios=numberofIOS;
@@ -554,7 +554,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 
 void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffer, unsigned int nmem_blocks, char *outfile, unsigned int *nres, unsigned int *nios) {
 
-	FILE *in1, *in2;
+	FILE *in1, *in2, *out;
 	in1= fopen(infile1,"r");
 	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
@@ -564,7 +564,7 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 
 	while(!feof(in1)) {
 		//Read as many blocks as the buffer fits
-		fread(buffer, sizeof(block_t), 1, in1);
+		fread(buffer, sizeof(block_t), nmem_blocks-1, in1);
 
 		if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
 			break;
@@ -606,13 +606,89 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 						if (find(v.begin(), v.end(), &buffer[b].entries[i].str[0])==v.end()) {
 							v.push_back(&buffer[b].entries[i].str[0]);
 						}
+
+					}
+					else{//not found
+                        vector<char *> insVect;//vector to insert to the map
+                        insVect.push_back(&buffer[b].entries[i].str[0]);//
+                        m3.insert(make_pair(buffer[b].entries[i].num,insVect));
 					}
 				}
 			}
 		}
 	}
+	fclose(in1);
+	in2=fopen(infile2,"r");
+	out=fopen(outfile,"w");
+	int outBufferIndex=0;
+	int blockID=0;
+	int numberofIOS=0;
+	int counter=0;
+	while(!feof(in2))//probe phase
+	{
+        fread(buffer, sizeof(block_t), nmem_blocks-1,in2);
 
-	//Sorts the records in the buffer based on the specified field
+		if(buffer[0].nreserved == 0) { //Because FEOF is set AFTER the end of file
+			break;
+		}
+		for (unsigned b=0; b<nmem_blocks-1; b++) {
+			int nreserved = buffer[b].nreserved;
+			for (int i=0; i<nreserved; ++i) {
+                if (outBufferIndex== MAX_RECORDS_PER_BLOCK)//if out buffer is full
+                {
+                    buffer[nmem_blocks-1].blockid=blockID;//insert the block details
+                    blockID++;
+                    buffer[nmem_blocks-1].valid=true;
+                    buffer[nmem_blocks-1].nreserved= MAX_RECORDS_PER_BLOCK;
+                    fwrite(&buffer[nmem_blocks-1],sizeof(block_t),1,out);//write
+                    numberofIOS++;//each writing
+                    memset(&buffer[nmem_blocks-1],0,sizeof(block_t));//flush the buffer
+                    outBufferIndex=0;
+                }
+                if(field == '0')
+                {
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].recid);
+                    if (rec!=m1.end())//found
+                    {
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the seconds file's record
+                        outBufferIndex++;
+                        counter++;
+                    }
+                }
+                else if(field == '1')
+                {
+                    unordered_map<unsigned int, int>::const_iterator rec=m1.find(buffer[b].entries[i].num);
+                    if (rec!=m1.end())//found
+                    {
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
+                        outBufferIndex++;
+                        cout<<"num:"<<rec->first<<endl;
+                        //cout<<outBufferIndex<<endl;
+                        counter++;
+                    }
+                }
+                else if(field == '2')
+                {
+                    unordered_map<char*, int>::const_iterator rec=m2.find(buffer[b].entries[i].str);
+                    if (rec!=m2.end())//found
+                    {
+                        memcpy(&buffer[nmem_blocks-1].entries[outBufferIndex],&buffer[b].entries[i],sizeof(record_t));//join with the second file's record
+                        outBufferIndex++;
+                        //cout<<"str1:"<<buffer[b].entries[i].str<<endl;
+                        //cout<<"str:"<<rec->first<<endl;
+                        counter++;
+                    }
+                }
+                else if(field == '3') {
+                    }
+            }
+        }
+	}
+    free(buffer);
+    fclose(in2);
+    fclose(out);
+    *nres=counter;
+    *nios=numberofIOS;
 
 
 

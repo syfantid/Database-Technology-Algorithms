@@ -20,7 +20,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 500;	// number of blocks in the file
+	int nblocks = 10;	// number of blocks in the file
 	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
@@ -34,15 +34,15 @@ int main(int argc, char** argv) {
 	//----------------------GENERATION OF INITIAL FILES--------------------------
 	cout<<"Creating input files..."<<endl;
 
-	/* Sofia, whenever you're having problems for Windows and Linux, test for 
+	/* Sofia, whenever you're having problems for Windows and Linux, test for
 	 * Windows using these macros! */
 
 #if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
 	outfile = fopen("file.bin", "wb");
 	outfile2 = fopen("file2.bin", "wb");
 #else
-	outfile = fopen("file.bin", "b");
-	outfile2 = fopen("file2.bin", "b");
+	outfile = fopen("file.bin", "w");
+	outfile2 = fopen("file2.bin", "w");
 #endif
 
 	char* s = new char[10];
@@ -123,7 +123,15 @@ int main(int argc, char** argv) {
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'1',buffer,20,outmerge,&nres,&nios);
+    MergeJoin(filename1,filename2,'2',buffer,4,outmerge,&nres,&nios);
+    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
+    cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
+
+    //------------------------HASH JOIN---------------------------//
+    cout<<endl<<"--------------HASH JOIN-------------------"<<endl<<endl;
+    char *hashoutfile= new char[30];
+    char outhash[]="outhash.bin";
+    HashJoin(filename1,filename2,'2',buffer,4,outhash,&nres,&nios);
     cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 	// open file and print contents
@@ -157,8 +165,8 @@ int main(int argc, char** argv) {
 
 	fclose(infile);*/
 
-	/* 
-	 * If you want to remove the segments, you can do this: 
+	/*
+	 * If you want to remove the segments, you can do this:
 	 * */
 #if defined(_WIN32) || defined(WIN32)
 	system("del /Q segment*.bin");
