@@ -12,8 +12,8 @@
 	#define FILE_READ "rb"
 	#define FILE_WRITE "wb"
 #else
-	#define FILE_READ "b"
-	#define FILE_WRITE "b"
+	#define FILE_READ "r"
+	#define FILE_WRITE "w"
 #endif
 
 std::string createFileName(unsigned fileNumber);

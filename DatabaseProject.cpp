@@ -8,7 +8,7 @@
 #include <ciso646>
 #include <algorithm>
 #include <stdio.h>
-#include <cassert>
+
 
 using namespace std;
 
@@ -110,9 +110,7 @@ void EliminateDuplicates (char *infile, unsigned char field, block_t *buffer,
 	FILE *inputfile, *outputfile;
 
     inputfile = fopen(outofMerge,FILE_READ); //Open the sorted file for reading
-    assert(inputfile);
 	outputfile = fopen(outfile,FILE_WRITE); //Open a file for output
-	assert(outputfile);
 
 	//Always keeping the previous record we read
 	record_t previous;
@@ -187,7 +185,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 		//Open the file
 		FILE *inputfile,*outputfile;
 		inputfile = fopen(infile,FILE_READ);
-		assert(inputfile);
 		//cout << "open: " << ++num_open << endl;
 		//Allocate memory to buffer
 		buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
@@ -231,7 +228,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 			int recSecIndex=0;
 			string name = createFileName(fileNumber);
 			outputfile = fopen(name.c_str(), FILE_WRITE);
-			assert(outputfile);
 			//cout << "open: " << ++num_open << endl;
 			for (unsigned b=0; b<nmem_blocks; b++) {
 				for (int i=0; i<MAX_RECORDS_PER_BLOCK && recSecIndex<recordsIndex; i++) {
@@ -286,7 +282,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 				string outputName = createFileName(outputFileNumber);
 				//cout << "3.x going to open" << endl;
 				outputfile = fopen(outputName.c_str(), FILE_WRITE);
-				assert(outfile);
 				//cout << "open: " << ++num_open << endl;
                 int openFiles = 0;
 				for(unsigned b=0; b<nmem_blocks-1; ++b) { //For each n-1 files read
@@ -296,7 +291,6 @@ void MergeSort (char *infile, unsigned char field, block_t *buffer,
 						names[b] = createFileName(inputFileNumber);
 						//cout << "3. going to open" << endl;
                         currentFiles[b] = fopen(names[b].c_str(),FILE_READ);
-                        assert(currentFiles[b]);
                         ++openFiles;
 						//cout << "open: " << ++num_open << endl;
 						//cout << "going to fread" << endl;
@@ -442,14 +436,14 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 	FILE *inputFile_R, *inputFile_S,*outputFile;
 
     inputFile_R= fopen(outfile_R,FILE_READ);
-	assert(inputFile_R);
+
 	//cout << "open: " << ++num_open << endl;
 	//cout<<outfile_R<<endl;
     inputFile_S= fopen(outfile_S,FILE_READ);
-	assert(inputFile_S);
+
 	//cout << "open: " << ++num_open << endl;
     outputFile=fopen(outfile,FILE_WRITE);
-    assert(outputFile);
+
 	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	fread(&buffer[0],sizeof(block_t),1,inputFile_R);
@@ -571,7 +565,7 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 
 	FILE *in1, *in2, *out;
     in1= fopen(infile1,FILE_READ);
-    assert(in1);
+
 	//cout << "open: " << ++num_open << endl;
 	buffer = (block_t *) malloc (sizeof(block_t)*nmem_blocks);
 	unordered_map<unsigned int,int> m1;
@@ -654,9 +648,9 @@ void HashJoin (char *infile1, char *infile2, unsigned char field, block_t *buffe
 	//Here starts the probing phase
 
     in2=fopen(infile2,FILE_READ);
-    assert(in2);
+
     out=fopen(outfile,FILE_WRITE);
-	assert(out);
+
 	int outBufferIndex=0;
 	int blockID=0;
 

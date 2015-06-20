@@ -20,7 +20,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 3;	// number of blocks in the file
+	int nblocks = 4;	// number of blocks in the file
 	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
