@@ -460,10 +460,7 @@ void MergeJoin (char *infile1, char *infile2, unsigned char field, block_t *buff
 			if(indexR<=buffer[0].nreserved-1) { //index of first file smaller than entries
                 //cout<<"3."<<endl;
 				if (indexS<=buffer[1].nreserved-1) { //index of second file
-<<<<<<< HEAD
-				    //cout<<"4."<<endl;
-=======
->>>>>>> 5d2f33b523e631f46aa998a6d4c96b9058ff025e
+
 					if(field=='0') { //join with ID
 						result= compareID(&buffer[0].entries[indexR],&buffer[1].entries[indexS]);
 					} else if(field=='1') { //join with num
