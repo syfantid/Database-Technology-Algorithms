@@ -8,7 +8,13 @@
 #include <vector>
 #include "dbtproj.h"
 
-bool operator == (const record_t& a, const record_t& b);
+#if defined(WIN32) || defined(_WIN32)
+	#define FILE_READ "rb"
+	#define FILE_WRITE "wb"
+#else
+	#define FILE_READ "b"
+	#define FILE_WRITE "b"
+#endif
 
 std::string createFileName(unsigned fileNumber);
 

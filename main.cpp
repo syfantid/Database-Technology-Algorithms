@@ -20,7 +20,7 @@ void gen_random_string(char *s, const int len) {
 int main(int argc, char** argv) {
 
     srand(time(0)); //Pseudorandom number
-	int nblocks = 5000;	// number of blocks in the file
+	int nblocks = 3;	// number of blocks in the file
 	if (argc == 2) nblocks = atoi(argv[1]);
 
 	record_t record1;
@@ -34,16 +34,13 @@ int main(int argc, char** argv) {
 	//----------------------GENERATION OF INITIAL FILES--------------------------
 	cout<<"Creating input files..."<<endl;
 
-	/* Sofia, whenever you're having problems for Windows and Linux, test for
-	 * Windows using these macros! */
-
-#if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
-	outfile = fopen("file.bin", "wb");
-	outfile2 = fopen("file2.bin", "wb");
-#else
-	outfile = fopen("file.bin", "w");
-	outfile2 = fopen("file2.bin", "w");
-#endif
+    #if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)
+        outfile = fopen("file.bin", "wb");
+        outfile2 = fopen("file2.bin", "wb");
+    #else
+        outfile = fopen("file.bin", "w");
+        outfile2 = fopen("file2.bin", "w");
+    #endif
 
 	char* s = new char[10];
 
@@ -53,25 +50,22 @@ int main(int argc, char** argv) {
 		for (int r=0; r<MAX_RECORDS_PER_BLOCK; ++r) { // for each record
 			// prepare a record for file 1
 			record1.recid = recid;
+			//cout<<"Record ID 1: "<<record1.recid<<endl;
 			record1.num = rand() % (nblocks*20);
             gen_random_string(s,5);
 			strcpy(record1.str,s);//Put a random string to each record
 
 			// prepare a record for file 2
 			record2.recid = recid++;
+			//cout<<"Record ID 2: "<<record2.recid<<endl;
 			record2.num = rand() % (nblocks*20);
             gen_random_string(s,5);
 			strcpy(record2.str,s);//Put a random string to each record
 
 			if (r==50)
             {
-                strcpy(record1.str,"kalimera");
-                strcpy(record2.str,"kalimera");
-            }
-            if  (r==60)
-            {
-                strcpy(record1.str,"hola");
-                strcpy(record2.str,"hola");
+                strcpy(record1.str,"Hola");
+                strcpy(record2.str,"Hola");
             }
 			record1.valid = true;
 			record2.valid = true;
@@ -93,18 +87,18 @@ int main(int argc, char** argv) {
 	fclose(outfile2);
 
 	//-----------------------------MERGE SORT-----------------------------------
-	cout<<endl<<"--------------------MERGE SORT-------------------"<<endl<<endl;
 	block_t *buffer = NULL;
+    unsigned int nios;
+    /*cout<<endl<<"--------------------MERGE SORT-------------------"<<endl<<endl;
+	char filename[] = "file.bin";
 	char *outputfile = new char[30]; //Big enough for a file name
 	unsigned int segmentsNumber;
 	unsigned int sortingPhases;
-	unsigned int IOsNumber;
-	char filename[] = "file.bin";
-    /*MergeSort(filename,'1',buffer,50,outputfile,&segmentsNumber,&sortingPhases,
-              &IOsNumber);
+    MergeSort(filename,'1',buffer,50,outputfile,&segmentsNumber,&sortingPhases,
+              &nios);
     cout<<"TOTAL PASSES: "<<sortingPhases<<endl;
     cout<<"SORTED SEGMENTS: "<<segmentsNumber<<endl;
-    cout<<"NUMBER OF IOs: "<<IOsNumber<<endl;
+    cout<<"NUMBER OF IOs: "<<nios<<endl;
     cout<<"OUTFILE: "<<outputfile<<endl;*/
 
     //-------------------------ELIMINATE DUPLICATES-----------------------------
@@ -112,10 +106,10 @@ int main(int argc, char** argv) {
     char outputfileunique[] = "NOduplicates.bin";
     unsigned int uniquerecords;
     EliminateDuplicates (filename, '2', buffer,20, outputfileunique,&uniquerecords,
-                         &IOsNumber);
+                         &nios);
     cout<<"UNIQUE RECORDS: "<<uniquerecords<<" OUT OF "
         <<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
-    cout<<"NUMBER OF IOs (including the merge sort IOs): "<<IOsNumber<<endl;
+    cout<<"NUMBER OF IOs (including the merge sort IOs): "<<nios<<endl;
     cout<<"OUTFILE: "<<outputfileunique<<endl;*/
 
 
@@ -124,19 +118,18 @@ int main(int argc, char** argv) {
     cout<<endl<<"--------------MERGE JOIN-------------------"<<endl<<endl;
     char *mergeoutfile= new char[30];
     unsigned int nres;
-    unsigned int nios;
     char filename1[]= "file.bin";
     char filename2[]= "file2.bin";
     char outmerge[]= "outmerge.bin";
-    MergeJoin(filename1,filename2,'3',buffer,50,outmerge,&nres,&nios);
-    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
+    MergeJoin(filename1,filename2,'0',buffer,400,outmerge,&nres,&nios);
+    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs (including the eliminate duplicates IOs): "<<nios<<endl;
 
     //------------------------HASH JOIN---------------------------//
     cout<<endl<<"--------------HASH JOIN-------------------"<<endl<<endl;
     char outhash[]="outhash.bin";
-    HashJoin("1outfile.bin","2outfile.bin",'3',buffer,50,outhash,&nres,&nios);
-    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<2*nblocks*MAX_RECORDS_PER_BLOCK<<endl;
+    HashJoin("1outfile.bin","2outfile.bin",'0',buffer,50,outhash,&nres,&nios);
+    cout<<"PAIRS IN THE OUTPUT: "<<nres<<" OUT OF "<<nblocks*MAX_RECORDS_PER_BLOCK<<endl;
     cout<<"NUMBER OF IOs: "<<nios<<endl;
 	// open file and print contents
 	/*infile = fopen("file.bin", "r");
